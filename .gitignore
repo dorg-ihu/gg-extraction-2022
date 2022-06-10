@@ -1,8 +1,8 @@
 # Ignore pdfminer for pushing
 pdfminer.six/
 
-# Ignore large lang_generator.h5 file
-lang_generator.h5
+# Ignore large files in models/
+models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
