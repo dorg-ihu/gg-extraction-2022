@@ -3,13 +3,13 @@
 import logging
 import re
 import sys
-import syntax
-import entities
-import pparser as parser
-import helpers
-import database
+from gm3.gm3 import syntax
+from gm3.gm3 import entities
+from gm3.gm3 import pparser as parser
+from gm3.gm3 import helpers
+from gm3.gm3 import database
 import pprint
-import tokenizer
+from gm3.gm3 import tokenizer
 import collections
 import argparse
 import multiprocessing

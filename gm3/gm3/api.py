@@ -3,11 +3,11 @@
 # Flask imports
 import io
 import sys
-import syntax
+from gm3.gm3 import syntax
 import el_core_news_sm
 import spacy
-import helpers
-from codifier import *
+from gm3.gm3 import helpers
+from gm3.gm3.codifier import *
 from archiveapi import ArchiveStats
 from operator import itemgetter
 from datetime import datetime, timedelta
@@ -22,7 +22,7 @@ import copy
 import pprint
 import logging
 import collections
-import database
+from gm3.gm3 import database
 import pymongo
 import markdown
 import json

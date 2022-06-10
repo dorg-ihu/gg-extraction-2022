@@ -1,13 +1,13 @@
 from multiprocessing import cpu_count
 # Imports
-import parser
+from gm3.gm3 import parser
 import collections
 import numpy as np
 import sys
 import pprint
 import re
-import codifier
-import database
+from gm3.gm3 import codifier
+from gm3.gm3 import database
 import pickle
 import string
 from spacy import displacy

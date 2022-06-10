@@ -2,9 +2,9 @@ import os
 import re
 import sys
 import json
-from entities import LegalEntities
+from gm3.gm3.entities import LegalEntities
 from collections import defaultdict
-from helpers import connected_components, get_edges
+from gm3.gm3.helpers import connected_components, get_edges
 from matplotlib import pyplot as plt
 import networkx
 from networkx.readwrite import json_graph

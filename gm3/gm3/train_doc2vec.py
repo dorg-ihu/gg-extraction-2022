@@ -4,7 +4,7 @@
 
 from multiprocessing import cpu_count
 from gensim.models.doc2vec import TaggedDocument
-import tokenizer
+from gm3.gm3 import tokenizer
 import gensim.models as g
 import argparse
 import logging

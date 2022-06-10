@@ -1,7 +1,7 @@
 import copy
-import codifier
-import syntax
-import helpers
+from gm3.gm3 import codifier
+from gm3.gm3 import syntax
+from gm3.gm3 import helpers
 from statistics import mean, stdev
 import logging
 import pparser as parser

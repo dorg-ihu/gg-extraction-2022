@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import tokenizer
+from gm3.gm3 import tokenizer
 import copy
 import re
 import multiprocessing
 import numpy as np
 from datetime import date, datetime, time
 import collections
-import helpers
-import entities
+from gm3.gm3 import helpers
+from gm3.gm3 import entities
 import string
 import os
 import gensim
@@ -19,8 +19,8 @@ import logging
 import itertools
 import glob
 import sys
-import phrase_fun
-import syntax
+from gm3.gm3 import phrase_fun
+from gm3.gm3 import syntax
 import json
 
 # configuration and parameters

@@ -5,11 +5,11 @@
 '''
 
 import pprint
-import syntax
+from gm3.gm3 import syntax
 import copy
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from syntax import *
+from gm3.gm3.syntax import *
 import gridfs
 import json
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Simple Exporter
 # usage: exporter.py --markdown < issue.txt > output.md
-import pparser as parser
+from gm3.gm3 import pparser as parser
 import sys
 sys.path.insert(0, '../')
 

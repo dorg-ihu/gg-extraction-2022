@@ -10,7 +10,7 @@ import json
 import collections
 import datetime
 import re
-import entities
+from gm3.gm3 import entities
 import itertools
 
 # Helper class that defines useful formatting and file handling functions

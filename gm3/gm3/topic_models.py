@@ -6,15 +6,15 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 
 # Imports
-from helpers import connected_components, get_edges
+from gm3.gm3.helpers import connected_components, get_edges
 import parser
 import collections
 import numpy as np
 import sys
 import pprint
 import re
-import codifier
-import database
+from gm3.gm3 import codifier
+from gm3.gm3 import database
 import math
 import pickle
 import string

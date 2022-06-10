@@ -1,15 +1,15 @@
 import pytest
-import pparser as parser
-import syntax
-import entities
-import database
+from gm3.gm3 import pparser as parser
+from gm3.gm3 import syntax
+from gm3.gm3 import entities
+from gm3.gm3 import database
 import pprint
-import helpers
-import tokenizer
+from gm3.gm3 import helpers
+from gm3.gm3 import tokenizer
 import re
 from copy import deepcopy
-import phrase_fun
-import codifier
+from gm3.gm3 import phrase_fun
+from gm3.gm3 import codifier
 import logging
 logger = logging.getLogger()
 logger.disabled = True

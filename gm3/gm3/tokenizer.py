@@ -1,6 +1,6 @@
 import copy
 import re
-import entities
+from gm3.gm3 import entities
 
 
 class Tokenizer:

@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from helpers import *
+from gm3.gm3.helpers import *
 import string
 from collections import Iterable
 

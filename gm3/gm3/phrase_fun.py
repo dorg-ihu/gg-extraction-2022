@@ -1,7 +1,7 @@
-import tokenizer
+from gm3.gm3 import tokenizer
 import re
-import entities
-import helpers
+from gm3.gm3 import entities
+from gm3.gm3 import helpers
 
 
 def replace_phrase(

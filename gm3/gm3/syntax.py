@@ -1,14 +1,14 @@
-import entities
+from gm3.gm3 import entities
 import json
 import re
 import collections
 import logging
-import helpers
-import tokenizer
+from gm3.gm3 import helpers
+from gm3.gm3 import tokenizer
 import itertools
 import copy
 import string
-import phrase_fun
+from gm3.gm3 import phrase_fun
 import spacy
 
 

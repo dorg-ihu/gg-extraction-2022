@@ -2,9 +2,9 @@
 # TextRank algorithm provided by gensim
 
 from gensim.summarization import summarize as summarize_textrank
-import codifier
+from gm3.gm3 import codifier
 import multiprocessing
-import database
+from gm3.gm3 import database
 import string
 import logging
 db = database.Database()
