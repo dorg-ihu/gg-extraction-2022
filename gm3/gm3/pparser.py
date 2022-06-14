@@ -74,6 +74,7 @@ class IssueParser:
             if not l:
                 break
             l = l.replace('−\n', '')
+            l = l.replace('-\n', '')
             l = l.replace('\n', ' ')
             l = re.sub(r' +', ' ', l)
             l = helpers.fix_par_abbrev(l)
@@ -231,8 +232,8 @@ class IssueParser:
         for i, line in enumerate(self.lines):
             if line.startswith('Άρθρο') or line.startswith(
                     'Ο Πρόεδρος της Δημοκρατίας'):
-                article_indices.append((i, line))
-                self.articles[line] = ''
+                article_indices.append((i, line.strip()))
+                self.articles[line.strip()] = ''
 
         for j in range(len(article_indices) - 1):
 

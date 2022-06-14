@@ -1,0 +1,15 @@
+charset_normalizer==2.0.12
+https://github.com/explosion/spacy-models/releases/download/el_core_news_sm-3.3.0/el_core_news_sm-3.3.0.tar.gz
+pymupdf==1.19.6
+gensim==4.2.0
+keras==2.9.0
+Markdown==3.3.7
+matplotlib==3.5.2
+networkx==2.8.2
+nox==2022.1.7
+numpy==1.22.3
+Pillow==9.1.1
+pytest==7.1.2
+scikit_learn==1.1.1
+spacy==3.3.0
+tensorflow==2.9.1
