@@ -1,7 +1,7 @@
 from re import compile, sub, findall, search, escape, DOTALL, match
 from collections import OrderedDict
-from ggHelper import Helper
-from respAclassifier import paragraphClf
+from gg18.ggHelper import Helper
+from gg18.respAclassifier import paragraphClf
 
 
 class RespExtractor(object):

@@ -11,7 +11,7 @@ import datetime
 import re
 import csv
 from json import dumps
-from dicttoxml import dicttoxml
+#from dicttoxml import dicttoxml
 from xml.dom.minidom import parseString
 from pickle import dump, load, HIGHEST_PROTOCOL
 

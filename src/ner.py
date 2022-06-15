@@ -8,9 +8,9 @@ class OrgExtractor:
     """
 
     def __init__(self, model='gm3/models/3gm_ner_model') -> None:
-        
         self.nlp  = spacy.load(model)
-        
+    # def __init__(self, model='gm3/data/ner_model_sm') -> None:
+    #     self.nlp  = spacy.load(model)
     
     def extract_entities(self, text):
         return self.nlp(text)
