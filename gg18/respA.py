@@ -86,6 +86,7 @@ class RespExtractor(object):
     			
     		return dec_prereqs
     
+    
     def get_articles(self, txt):
     	""" 
     		Return a dictionary of articles contained within a GG Issue.
@@ -127,7 +128,7 @@ class RespExtractor(object):
     		paragraphs = findall(r"\n?\s*([Ά-ΏΑ-Ωα-ωά-ώBullet\d+\(•\-\−]+[\.\)α-ω ][\s\S]+?(?:[\.\:](?=\s*\n)|\,(?=\s*\n(?:[α-ω\d]+[\.\)]|Bullet))))", txt)
     	return paragraphs
     
-
+    
     def get_units_and_respas_following_respas_decl(self, paorg_pres_decree_txt):
     		"""  
     			Return a dictionary of rough Organization Unit - RespA associations
@@ -273,8 +274,6 @@ class RespExtractor(object):
     		return units_and_respas_following_respas_decl
     
     
-    
-    
     def get_units_followed_by_respas(self, paorg_pres_decree_txt):
     		"""  
     			Return a dictionary of rough Organization Unit - RespA associations
@@ -360,8 +359,121 @@ class RespExtractor(object):
     		return units_followed_by_respas
     
     
+    def get_units_and_respas(self, paorg_pres_decree_txt):
+    	""" 
+    		Return dictionary of rough Organization Unit - RespA associations
+    		mentioned in single paragraphs.
+    		
+    		@param paorg_pres_decree_txt: GG Presidential Decree Organization Issue
+    									  e.g. "ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 18 
+    											Οργανισμός Υπουργείου Παιδείας, Έρευνας και 
+    											Θρησκευμάτων.",
+
+    											"ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 4 
+    											Οργανισμός Υπουργείου Πολιτισμού και Αθλη-
+    											τισμού." etc.
+
+    		e.g. 
+    		{ 
+    			'Το Γραφείο Φύλαξης Πληροφόρησης είναι αρμόδιο για τον προγραμματισμό και':
+
+    		    'Το Γραφείο Φύλαξης Πληροφόρησης είναι αρμόδιο 
+    			για τον προγραμματισμό και έλεγχο της φύλαξης των 
+    			Μουσείων, αποθηκών αρχαίων, αρχαιολογικών χώρων 
+    			και εν γένει αρχαιολογικών εγκαταστάσεων, την τήρηση και εποπτεία της φύλαξης κατά τις ημέρες των 
+    			εξαιρέσιμων και αργιών και τη σύνταξη των σχετικών 
+    			καταστάσεων για την αποζημίωση των προσφερομένων 
+    			υπηρεσιών κατά τις ημέρες αυτές, οι οποίες εγκρίνονται 
+    			από τον Προϊστάμενο. Επιπλέον μεριμνά για την ευταξία αρχαιολογικών χώρων και μουσείων και εν γένει για 
+    			την εύρυθμη λειτουργία τους, καθώς και για την ευπρεπή συμπεριφορά του αρχαιοφυλακτικού προσωπικού, 
+    			όπως επίσης συντονίζει τους ορισμένους υπεύθυνους 
+    			αρχιφύλακες.',
+    			
+    			...
+    		}
+
+    	"""
+    	paragraph_clf = paragraphClf()
+    	articles = self.get_articles(paorg_pres_decree_txt)
+    	additional_respas_threshold = 6
+    	units_and_respas = OrderedDict()
+    	units_and_respa_sections = []
+    	
+    	def get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold):
+    		unit_and_respa_sections = []
+    		for i, prgrph in enumerate(paragraphs):
+    			unit_and_respa_paragraph_criteria = (paragraph_clf.has_units_and_respas(prgrph) or
+    											  (paragraph_clf.has_units_followed_by_respas(prgrph) and len(prgrph)>150)) and\
+    												paragraph_clf.has_units(prgrph.replace('Αρμοδιότητες ', '')[:20])
+    			if unit_and_respa_paragraph_criteria:
+    				additional_respas_following_criterion = (prgrph[-1] == ':' or prgrph[-2] == ':')
+    				if additional_respas_following_criterion:
+    					# Append following paragraphs 
+    					# containing additional respas to prgrph
+    					for j in range(i+1, i+1+additional_respas_threshold):
+    						if j < len(paragraphs):
+    							prgrph += paragraphs[j]
+    				# Append paragraph containing unit with its respas
+    				unit_and_respa_sections.append(prgrph)
+    		return unit_and_respa_sections
+
+    	def disentangle_units_from_respas(units_and_respa_sections):
+    		print("units_and_respa_sections: ", unit_and_respa_sections)
+    		for unit_and_respa_section in units_and_respa_sections:
+    			# Unit assumed to be in 20 first words
+    			unit = ' '.join(Helper.get_words(Helper.remove_list_points(unit_and_respa_section), n=20))
+    			respas = unit_and_respa_section
+    			# Units starts with uppercase character
+    			if unit[0].isupper() or unit[0].isdigit():
+    				if unit in units_and_respas and\
+    				   any([(respa not in units_and_respas[unit]) for respa in respas]):
+    					units_and_respas[unit] += respas
+    				else:
+    					units_and_respas[unit] = respas
+    		return 
+    				
+    	if articles:
+    		if isinstance(articles, dict): articles = list(articles.values())
+    		for artcl in articles:
+    			artcl_paragraphs = self.get_paragraphs(artcl)
+    			units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
+    		units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
+    	else:
+    		paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    		units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
+
+    	unit_and_respa_sections = [x for x in units_and_respa_sections if x]
+    	disentangle_units_from_respas(units_and_respa_sections)
+    	print('disentangled_units: ', unit_and_respa_sections)
+    	return units_and_respas
     
     
+    def get_rough_unit_respa_associations(self, paorg_pres_decree_txt, format=''):
+    	"""
+    		Return a dictionary of rough Organization Unit - RespA associations
+
+    		@param paorg_pres_decree_txt: GG Presidential Decree Organization Issue
+    									  e.g. "ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 18 
+    											Οργανισμός Υπουργείου Παιδείας, Έρευνας και 
+    											Θρησκευμάτων.",
+
+    											"ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 4 
+    											Οργανισμός Υπουργείου Πολιτισμού και Αθλη-
+    											τισμού." etc.
+     	"""
+    	units_and_respas = self.get_units_and_respas(paorg_pres_decree_txt)
+    	units_followed_by_respas = self.get_units_followed_by_respas(paorg_pres_decree_txt)
+    	units_and_respas_following_respas_decl = self.get_units_and_respas_following_respas_decl(paorg_pres_decree_txt)
+
+    	units_and_respas.update(units_followed_by_respas)
+    	units_and_respas.update(units_and_respas_following_respas_decl)
+    	rough_unit_respa_associations = units_and_respas
+    	
+    	if format.lower() == 'json':
+    		return Helper.get_json(rough_unit_respa_associations, encoding='utf-8')
+    	elif format.lower() == 'xml':
+    		return Helper.get_xml(rough_unit_respa_associations)
+    	return rough_unit_respa_associations 
     
     
     

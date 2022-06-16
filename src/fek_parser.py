@@ -103,12 +103,4 @@ class FekParser(IssueParser):
         super().__init__(filename, stdin, toTxt)
 
 
-    
-
-
-
-        
-
-
-
 
