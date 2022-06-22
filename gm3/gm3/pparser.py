@@ -84,6 +84,10 @@ class IssueParser:
             infile.close()
 
         for line in tmp_lines:
+            # gg22 consider add this to escape the situation when ΕΦΗΜΕΡΙ∆Α TΗΣ ΚΥΒΕΡΝΗΣΕΩΣ is wrongly located on the end of a page
+            # if line.endswith('ΕΦΗΜΕΡΙ∆Α TΗΣ ΚΥΒΕΡΝΗΣΕΩΣ'): line.replace('ΕΦΗΜΕΡΙ∆Α TΗΣ ΚΥΒΕΡΝΗΣΕΩΣ', '')
+            # if line.endswith('ΕΦΗΜΕΡΙΣ ΤΗΣ ΚΥΒΕΡΝΗΣΕΩΣ'): line.replace('ΕΦΗΜΕΡΙΣ ΤΗΣ ΚΥΒΕΡΝΗΣΕΩΣ', '')
+            
             if line == '':
                 continue
             elif line.startswith('Τεύχος') or line.startswith('ΕΦΗΜΕΡΙ∆Α TΗΣ ΚΥΒΕΡΝΗΣΕΩΣ') or line.startswith('ΕΦΗΜΕΡΙΣ ΤΗΣ ΚΥΒΕΡΝΗΣΕΩΣ'):
@@ -227,13 +231,21 @@ class IssueParser:
         Extracts start with quotation marks	(«, »).
         Strip punctuation and split document into sentences.
         """
-
+        
+        # gg22 added        
         article_indices = []
         for i, line in enumerate(self.lines):
-            if line.startswith('Άρθρο') or line.startswith(
-                    'Ο Πρόεδρος της Δημοκρατίας'):
+            if (line.strip().startswith('Άρθρο') and len(line.strip()) < 10) or line.startswith(
+                    'Ο Πρόεδρος της Δημοκρατίας') or line.startswith('Η Πρόεδρος της Δημοκρατίας'):
                 article_indices.append((i, line.strip()))
                 self.articles[line.strip()] = ''
+        
+        # article_indices = []
+        # for i, line in enumerate(self.lines):
+        #     if line.startswith('Άρθρο') or line.startswith(
+        #             'Ο Πρόεδρος της Δημοκρατίας'):
+        #         article_indices.append((i, line.strip()))
+        #         self.articles[line.strip()] = ''
 
         for j in range(len(article_indices) - 1):
 
@@ -259,8 +271,15 @@ class IssueParser:
 
             self.articles[article_indices[j][1]] = ''.join(content)
             self.articles_as_paragraphs[article_indices[j][1]] = paragraphs
+        
         try:
             del self.articles['Ο Πρόεδρος της Δημοκρατίας']
+        except BaseException:
+            pass
+        
+        # gg22 added
+        try:
+            del self.articles['Η Πρόεδρος της Δημοκρατίας']
         except BaseException:
             pass
 

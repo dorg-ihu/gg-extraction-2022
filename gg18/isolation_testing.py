@@ -8,75 +8,74 @@ fekParser = FekParser('yp-oikonomikwn-142-2017.txt')
 respaParser = RespExtractor()
 ner = OrgExtractor()
 
+
 #%%
-
-text = textParser.pdf2text(fekpath='yp-oikonomikwn-142-2017.pdf', savefile=True)
-filename = 'yp-oikonomikwn-142-2017.pdf'
-articles = FekParser.find_articles(filename)
-
-
-text = textParser.pdf2text(fekpath='yp-oikonomikwn-142-2017.pdf', savefile=False)
-responsibilities_extraction = respaParser.get_rough_unit_respa_associations(text)
-
-
-
-def isotesting_structure(fekpath):
-    text  = textParser.pdf2text(fekpath=fekpath, savefile=False)
-    prerequisites = respaParser.get_dec_prereqs(text)
-    articles = respaParser.get_articles(text)
-    
-    paragraphsofArt1 = respaParser.get_paragraphs(articles[1])
-    paragraphsofArt5 = respaParser.get_paragraphs(articles[5])
-    paragraphsofArt10 = respaParser.get_paragraphs(articles[10])
-    paragraphsofArt15 = respaParser.get_paragraphs(articles[15])
-    
-    return text, prerequisites, articles, paragraphsofArt1, paragraphsofArt5, paragraphsofArt10, paragraphsofArt15
-
-
-def isotesting_respa(text):
-    responsibilities = respaParser.get_units_followed_by_respas(text)
-    responsibilities_decl = respaParser.get_units_and_respas_following_respas_decl(text)
-    return responsibilities, responsibilities_decl
-
-
 
 
 fekpaths = [
-    'C:/Users/kostas/GitHub/edyte/gg-extraction-2022/yp-oikonomikwn-142-2017.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-agrotikhsanaptukshskaitrofimwn-97-2017.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-anaptiksiskaiependusewn-5-2022.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-ekswterikwnapodimouellhnismou-4781-2022.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-eswterikwn-141-2017.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-ethnikisaminas-2292-1995.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-klimatikhskrishskaipolitikhsprostasias-151-2004.pdf',
-    'C:/Users/kostas/Documents/EDYTE/papers/fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf'
+    'fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-agrotikhsanaptukshskaitrofimwn-97-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-anaptiksiskaiependusewn-5-2022.pdf', # starts with Άρθρο τάδε + characters + προβλημα με τον πινακα στο τελος
+    'fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf', # τελευταίο άρθρο κενό
+    'fek-organismoi-upourgeiwn/yp-ekswterikwnapodimouellhnismou-4781-2022.pdf', # το κουλό
+    'fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-eswterikwn-141-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ethnikisaminas-2292-1995.pdf', # NO
+    'fek-organismoi-upourgeiwn/yp-klimatikhskrishskaipolitikhsprostasias-151-2004.pdf', # NO
+    'fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf', # τελευταίο άρθρο κενό
+    'fek-organismoi-upourgeiwn/yp-nautiliaskainhsiwtikhspolitikhs-13-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-paideiaskaithriskeumatwn-18-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-periballontoskaienergeias-132-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-politismoukaiathlitismou-4-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-prostasiastoupolith-62-2019.pdf',
+    'fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf',
+    'fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf'
     ]
 
-
-text, prerequisites, articles, paragraphsofArt1, paragraphsofArt5, paragraphsofArt10, paragraphsofArt15 = isotesting_structure(fekpaths[4])
-respa, respa_decl = isotesting_respa(text)
-
+# for path in fekpaths:
+#     textParser.pdf2text(path, savefile=True)
 
 
-txt = respaParser.get_paragraphs(articles[15])
-print(respaParser.get_units_followed_by_respas(txt))
-
+fekParser = FekParser('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
 articles = fekParser.articles
-print(fekParser.articles.keys())
+
+
+paragraphs = fekParser.articles_as_paragraphs
+fekParser.sentences
+lines = fekParser.lines
 
 
 
-#%%
 
-fekParser = FekParser('yp-oikonomikwn-142-2017.txt')
 
-dates = fekParser.dates
-articles = fekParser.articles
-articles_as_paragraphs = fekParser.articles_as_paragraphs
 
-statutes = fekParser.statutes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
