@@ -254,15 +254,16 @@ class IssueParser:
             paragraphs = collections.defaultdict(list)
             current = '0'
             for t in content:
-                x = re.search(r'\d+.', t)
-                if x and x.span() in [(0, 2), (0, 3)]:
+                #x = re.search(r'\d+.', t)
+                x = re.search(r'\d+\.', t) # gg22 . above regex also captures 2-digits 
+                if x and x.span() in [(0, 2), (0, 3)]: # cosinder add (0, 4) for cases such as 101. if you face any
                     current = x.group().strip('.')
                 paragraphs[current].append(t)
 
             sentences = {}
 
             for par in paragraphs.keys():
-                val = ''.join(paragraphs[par])[1:]
+                val = ''.join(paragraphs[par])[0:]
                 paragraphs[par] = val
                 sentences[par] = list(
                     filter(

@@ -1,15 +1,16 @@
-from gg18.respA import RespExtractor
+#from gg18.respA import RespExtractor
 from src.fek_parser import PreParser, FekParser
 from src.ner import OrgExtractor
+#import collections
 
 textParser = PreParser()
 fekParser = FekParser()
 fekParser = FekParser('yp-oikonomikwn-142-2017.txt')
-respaParser = RespExtractor()
+
 ner = OrgExtractor()
 
 
-#%%
+#%% articles - paragraphs - lines 3gm
 
 
 fekpaths = [
@@ -39,28 +40,28 @@ fekpaths = [
 
 
 fekParser = FekParser('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
-articles = fekParser.articles
-
-
-paragraphs = fekParser.articles_as_paragraphs
-fekParser.sentences
+articless = fekParser.articles
+paragraphss = fekParser.articles_as_paragraphs
 lines = fekParser.lines
 
 
 
 
+#%% get Respa based on articles and paragraphs of 3gm
+#from src.fek_parser import PreParser, FekParser
 
 
+from gg18.gm3respA import RespaExtractor
+respaParser = RespaExtractor('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
+allrespas = respaParser.get_rough_unit_respa_associations()
 
 
-
-
-
-
-
-
-
-
+from src.fek_parser import PreParser
+from gg18.respA import RespExtractor
+respParser = RespExtractor()
+textparser = PreParser()
+text = textparser.pdf2text("fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf")
+allrespasgg18 = respParser.get_rough_unit_respa_associations(text)
 
 
 
