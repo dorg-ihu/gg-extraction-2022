@@ -108,6 +108,7 @@ class IssueParser:
         self.find_dates()
         self.articles = {}
         self.articles_as_paragraphs = {}
+        self.digitmatches = [] #gg22
         if not stdin:
             self.name = filename.replace('.pdf', '')
         else:
@@ -255,10 +256,18 @@ class IssueParser:
             current = '0'
             for t in content:
                 #x = re.search(r'\d+.', t)
-                x = re.search(r'\d+\.', t) # gg22 . above regex also captures 2-digits 
-                if x and x.span() in [(0, 2), (0, 3)]: # cosinder add (0, 4) for cases such as 101. if you face any
-                    current = x.group().strip('.')
-                paragraphs[current].append(t)
+                #x = re.search(r'\d+\.', t) # gg22 . above regex also captures 2-digits 
+                
+                #if x and x.span() in [(0, 2), (0, 3)]: # cosinder add (0, 4) for cases such as 101. if you face any
+                #  current = x.group().strip('.')
+                #   
+                #x = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.', t.lstrip()[:6])
+                # or 
+                x = re.match(r'^\d{1,2}[α-ωΑ-Ω]{,2}[)|.]', t.lstrip()[:7])
+                if x:
+                    current = re.sub("[^0-9]", "", x.group())
+                    self.digitmatches.append(x.group())
+                paragraphs[current].append(t.lstrip())
 
             sentences = {}
 
