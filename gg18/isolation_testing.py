@@ -39,12 +39,12 @@ fekpaths = [
 #     textParser.pdf2text(path, savefile=True)
 
 
-fekParser = FekParser('fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.txt')
+fekParser = FekParser('fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.txt')
 articless = fekParser.articles
 paragraphss = fekParser.articles_as_paragraphs
 lines = fekParser.lines
-
-
+digitmatches = fekParser.digitmatches
+unique_digitmatches = set(digitmatches)
 
 
 
@@ -81,7 +81,7 @@ allrespasgg18 = respParser.get_rough_unit_respa_associations(text)
 #λαλακκκκ
 import re
 
-string = '111. Έλα ρε τι κάνεις'
+string = ' 2. H Διεύθυνση Εκπαιδευτικής Τεχνολ'
 x = re.search(r'\d+.', string)
 
 """ maybe more elegant """
@@ -90,11 +90,13 @@ x = re.search(r'\d+.', string)
 # ^\d+\)    ==> 1) or 11)
 # ^\d+\D+\. ==> 1a. or 11aa. 
 
-y = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.')
+# ^\d+\D*[.)]
+string = '7 ΠΕ. 18.08 Οδοντοτεχνικής, 1 ΠΕ. 18.09 Κοινωνικής Ερ-'
+y = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.', string.lstrip()[:6])
 
+z = re.match(r'^\d+\D*[.)]', string.lstrip())
 
-
-
+j = re.match(r'\d{1,3}\S{1,3}(\)|\.)', string.lstrip())
 
 
 
