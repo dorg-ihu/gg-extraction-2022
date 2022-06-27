@@ -39,10 +39,13 @@ fekpaths = [
 #     textParser.pdf2text(path, savefile=True)
 
 
-fekParser = FekParser('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
+fekParser = FekParser('fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.txt')
 articless = fekParser.articles
 paragraphss = fekParser.articles_as_paragraphs
 lines = fekParser.lines
+
+
+
 
 
 
@@ -74,9 +77,20 @@ allrespasgg18 = respParser.get_rough_unit_respa_associations(text)
 
 
 
+#%% test digit regex
+#λαλακκκκ
+import re
 
+string = '111. Έλα ρε τι κάνεις'
+x = re.search(r'\d+.', string)
 
+""" maybe more elegant """
+# ^\d+\.    ==> 1. or 11.
+# ^\d+\D+\) ==> 1α) or 11aa)
+# ^\d+\)    ==> 1) or 11)
+# ^\d+\D+\. ==> 1a. or 11aa. 
 
+y = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.')
 
 
 
