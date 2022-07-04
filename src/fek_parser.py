@@ -28,7 +28,44 @@ class PreParser:
         
         return w
     
+    
+    def parenthesis_line_merging(self, doc):
+        texts = doc.splitlines()
+        new_texts = []
+        last_merged = False
+        for i, text in enumerate(texts):
+            if not last_merged:
+                open_par, close_par = text.rfind("("), text.rfind(")")
+                if open_par <= close_par:
+                    new_texts.append(text)
+                else:
+                    new_texts.append(texts[i] + texts[i+1])
+                    last_merged = True
+            else:
+                last_merged = False
+                continue
+        doc = "\n".join(new_texts)
+        return doc
 
+    def bracket_line_merging(self, doc):
+        texts = doc.splitlines()
+        new_texts = []
+        last_merged = False
+        for i, text in enumerate(texts):
+            if not last_merged:
+                open_par, close_par = text.rfind("["), text.rfind("]")
+                if open_par <= close_par:
+                    new_texts.append(text)
+                else:
+                    new_texts.append(texts[i] + texts[i+1])
+                    last_merged = True
+            else:
+                last_merged = False
+                continue
+        doc = "\n".join(new_texts)
+        return doc  
+    
+    
     def fix_article_errors(self, doc):
         """
         There are cases where an article appears like "Άρθ ρο".
@@ -85,7 +122,8 @@ class PreParser:
         doc = doc.replace("-\n", "")
         doc = doc.replace("−\n", "")
         
-
+        doc = self.parenthesis_line_merging(doc)
+        doc = self.bracket_line_merging(doc)
 
         if savefile:
             savepath = re.sub(r".pdf$", ".txt", fekpath)
