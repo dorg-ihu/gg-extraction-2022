@@ -5,7 +5,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 import pandas as pd
+import json
+from collections import OrderedDict
 
+
+def make_split_on_webelements(thelist, identifier='Άρθρο'):
+    """
+    list of webelements
+    """
+    if len(thelist) == 0:
+        return []
+    r0, r1 = [], []
+    for s in thelist:
+        if identifier in s.text:
+            if r1:
+                r0.append(r1)
+                r1 = []
+        r1.append(s)
+    return r0 + [r1]
 
 def instantiateDriver(url='https://www.kodiko.gr/'):
     options = Options()
@@ -80,56 +97,11 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
-
-# tologin_email = 'christantonis.kons@gmail.com'
-# tologin_password = '123456'
-
 url = 'https://www.kodiko.gr/'
 options = Options()
 options.page_load_strategy = 'eager'
 driver = webdriver.Firefox(options=options)
 driver.get(url)
-
-# try:
-#     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
-#     print("Good, I clicked the Accept button.")
-# except:
-#     print("No Accept button to click. I continue")
-#     pass
-
-# time.sleep(2)
-# #//span[@id='myAccountMenu']
-# try:
-#     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, ".//span[@id='myAccountMenu']"))).click()
-#     print("Good, I clicked the Accept button.")
-# except:
-#     print("No Accept button to click. I continue")
-#     pass
-
-# url_to_connect = driver.find_element_by_xpath("//a[contains(text(),'Σύνδεση')]").get_attribute('href') #https://accounts.kodiko.gr/#/login?rapp=kodiko_legislation&rurl=https://www.kodiko.gr/
-# driver.get(url_to_connect)
-# time.sleep(2)
-
-# email = driver.find_element_by_xpath("//input[@id='email_input']")
-# password = driver.find_element_by_xpath("//input[@id='password_input']")
-
-# email.send_keys(tologin_email)
-# password.send_keys(tologin_password)
-
-# driver.find_element_by_xpath("//button[contains(text(),'Συνδεση')]").click()
-
-
-
-
-
-
-
-
 
 
 urls_dict = {
@@ -138,22 +110,11 @@ urls_dict = {
              }
 
 
-
-
-
 for key in urls_dict:
     
     url = urls_dict[key]
     driver.get(url)
         
-    # try:
-    #     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
-    #     print("Good, I clicked the Accept button.")
-    # except:
-    #     print("No Accept button to click. I continue")
-    #     pass
-    
-    
     last_height = driver.execute_script("return document.body.scrollHeight")
     while True:
     # Scroll down to bottom
@@ -191,8 +152,158 @@ for key in urls_dict:
     if len(articles_idx)>1:
         articles_idx.append(len(valid_doc_relatives))
         articles = [valid_doc_relatives[previous:current] for previous, current in zip(articles_idx, articles_idx[1:])]
-                
+  
+
+              
+#%%
+
+
+import time
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+import pandas as pd
+import json
+from collections import OrderedDict
+
+def make_split_on_webelements(thelist, identifier='Άρθρο'):
+    """
+    list of webelements
+    """
+    if len(thelist) == 0:
+        return []
+    r0, r1 = [], []
+    for s in thelist:
+        if identifier in s.text:
+            if r1:
+                r0.append(r1)
+                r1 = []
+        r1.append(s)
+    return r0 + [r1]
+
+
+urls_dict = {
+              "Υπουργείο Dummy": 'https://www.kodiko.gr/nomothesia/document/800098/p.d.-51-2022',
+              "Υπουργείο Τουρισμού": 'https://www.kodiko.gr/nomothesia/document/308558'
+             }
+
+
+
+
+
+# for key in urls_dict:
     
+#     url = urls_dict[key]
+#     driver.get(url)
+
+
+url = 'https://www.kodiko.gr/nomothesia/document/308558'
+options = Options()
+options.page_load_strategy = 'eager'
+driver = webdriver.Firefox(options=options)
+driver.get(url)
+WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
+time.sleep(2)
+document = OrderedDict()
+
+
+identifier = driver.find_element_by_css_selector("h1[class='center left-md']")
+IDENTITY = identifier.text
+
+
+
+HEADER = driver.find_element_by_xpath("//span[contains(text(),'Κεφαλίδα')]")
+HEADER.click()
+time.sleep(2)
+
+header_content = driver.find_element_by_class_name("dc_srch_trgt")
+
+TITLE = header_content.find_elements_by_tag_name("p")[1].text
+
+prereq = header_content.text
+prereq_idx = prereq.find("Έχοντας υπόψη")
+PREREQ = prereq[prereq_idx:].replace("\n", " ")
+
+BODY = driver.find_element_by_xpath("//span[contains(text(),'Σώμα')]")
+BODY.click()
+time.sleep(2)
+
+
+
+chapter_elements = driver.find_elements_by_xpath("//body/div[@id='app']/div[@id='wrapper']/div[@id='sidebar-wrapper']/div[@id='document_navigation']/ul/li/ul/li/ul/li")
+
+
+chapters = OrderedDict()
+
+for ele in chapter_elements:
+    
+    chapter_body = ele.find_element_by_class_name("pointer").click()
+    time.sleep(2)
+    chapter_title = driver.find_element_by_class_name("doc.relative").text.replace("\n", " - ")
+
+    
+    chapter_content = ele.find_element_by_tag_name("ul")
+    
+    chapter_clickables = ele.find_elements_by_tag_name("span")
+    chapter_clickables = [x for x in chapter_clickables if x.text != "[-]"]
+    chapter_clickables = [x for x in chapter_clickables if "ΚΕΦΑΛΑΙΟ" not in x.text]
+    
+    chapter_articles_and_paragraphs = make_split_on_webelements(chapter_clickables)
+      
+    articles = OrderedDict()
+    for artcl in chapter_articles_and_paragraphs:
+        
+        artcl[0].click()
+        time.sleep(2)
+        
+        article_title_element = driver.find_element_by_class_name("doc.relative")
+        article_title_tag = article_title_element.find_element_by_class_name("center").text
+        article_title_text = article_title_element.find_element_by_class_name("center.dc_srch_trgt").text
+        article_title = article_title_tag + ' - ' + article_title_text
+
+        if len(artcl) == 1:
+            article_body = driver.find_elements_by_tag_name("p")
+            text = [x.text for x in article_body if x.text]
+            article_text = " ".join(text)
+            articles[article_title] = article_text
+        elif len(artcl) > 1:
+            paragraphs = OrderedDict()
+            for i in range(1, len(artcl)):
+                artcl[i].click()
+                time.sleep(2)
+                text = driver.find_element_by_class_name("dc_srch_trgt").text
+                paragraphs[i] = text
+            articles[article_title] = paragraphs
+        time.sleep(2)
+
+
+    chapters[chapter_title] = articles
+
+
+document["identity"] = IDENTITY
+document["title"] = TITLE
+document["prereq"] = PREREQ
+document["body"] = chapters
+
+
+documents_json = json.dumps(document)
+with open("kodiko_data.json", 'w', encoding='utf-8') as fp:
+    json.dump(document, fp, ensure_ascii=False)
+
+    
+
+
+
+
+
+
+
+
+
+
+
     
     
     
