@@ -197,17 +197,19 @@ urls_dict = {
     
 #     url = urls_dict[key]
 #     driver.get(url)
+timesleep = 0.5
 
-
-url = 'https://www.kodiko.gr/nomothesia/document/308558'
+#url = 'https://www.kodiko.gr/nomothesia/document/308558'
+#url = 'https://www.kodiko.gr/nomothesia/document/800098/p.d.-51-2022'
+url = 'https://www.kodiko.gr/nomothesia/document/800076/p.d.-49-2022'
 options = Options()
 options.page_load_strategy = 'eager'
 driver = webdriver.Firefox(options=options)
 driver.get(url)
 WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
-time.sleep(2)
+time.sleep(timesleep)
 document = OrderedDict()
-
+time.sleep(2)
 
 identifier = driver.find_element_by_css_selector("h1[class='center left-md']")
 IDENTITY = identifier.text
@@ -216,7 +218,7 @@ IDENTITY = identifier.text
 
 HEADER = driver.find_element_by_xpath("//span[contains(text(),'Κεφαλίδα')]")
 HEADER.click()
-time.sleep(2)
+time.sleep(timesleep)
 
 header_content = driver.find_element_by_class_name("dc_srch_trgt")
 
@@ -228,23 +230,154 @@ PREREQ = prereq[prereq_idx:].replace("\n", " ")
 
 BODY = driver.find_element_by_xpath("//span[contains(text(),'Σώμα')]")
 BODY.click()
-time.sleep(2)
+time.sleep(timesleep)
+
+
+chapters_exist = False
+inner_body = driver.find_elements_by_xpath("//body/div[@id='app']/div[@id='wrapper']/div[@id='sidebar-wrapper']/div[@id='document_navigation']/ul/li/ul/li/ul/li")
+for ele in inner_body:
+    if "ΚΕΦΑΛΑΙΟ" in ele.text:
+        chapters_exist = True
+        break
+
+if not chapters_exist:
+    articles = OrderedDict()
+    for ele in inner_body:
+        article_clickables = ele.find_elements_by_tag_name("span")
+        article_clickables[0].click()
+        time.sleep(timesleep)
+        
+        article_title_element = driver.find_element_by_class_name("doc.relative")
+        article_title_tag = article_title_element.find_element_by_class_name("center").text
+        try:
+            article_title_text = article_title_element.find_element_by_class_name("center.dc_srch_trgt").text
+        except:
+            article_title_text = ''
+        if article_title_text:
+            article_title = article_title_tag + ' - ' + article_title_text
+        else:
+            article_title = article_title_tag
+        
+        if len(article_clickables) == 1:
+            article_body = driver.find_elements_by_tag_name("p")
+            text = [x.text for x in article_body if x.text]
+            article_text = " ".join(text)
+            articles[article_title] = article_text
+        elif len(article_clickables) > 1:
+            article_clickables = [x for x in article_clickables if x.text != "[-]"]
+            paragraphs = OrderedDict()
+            for i in range(1, len(article_clickables)):
+                article_clickables[i].click()
+                time.sleep(timesleep)
+                text = driver.find_element_by_class_name("dc_srch_trgt").text
+                paragraphs[i] = text
+            articles[article_title] = paragraphs
+            #clickables = [x for x in clickables if "Άρθρο" not in x.text]
+    document["body"] = articles
+else:
+    chapters = OrderedDict()
+    for ele in inner_body:
+        ele = inner_body[0]
+        initial_body = ele.find_element_by_class_name("pointer").click()
+        
+        if initial_body is None:
+            articles = ele.find_elements_by_tag_name("li")
+        
+        initial_title = initial_body.text
+        time.sleep(timesleep)
+        initial_title = driver.find_element_by_class_name("doc.relative").text.replace("\n", " - ")
+        print(initial_title)
+        
+        chapter_content = ele.find_element_by_tag_name("ul")
+        
+
+        
+        chapter_clickables = ele.find_elements_by_tag_name("span")
+        chapter_clickables = [x for x in chapter_clickables if x.text != "[-]"]
+        chapter_clickables = [x for x in chapter_clickables if "ΚΕΦΑΛΑΙΟ" not in x.text]
+        
+        chapter_articles_and_paragraphs = make_split_on_webelements(chapter_clickables)
+          
+        articles = OrderedDict()
+        for artcl in chapter_articles_and_paragraphs:
+            
+            artcl[0].click()
+            time.sleep(timesleep)
+            
+            article_title_element = driver.find_element_by_class_name("doc.relative")
+            article_title_tag = article_title_element.find_element_by_class_name("center").text
+            try:
+                article_title_text = article_title_element.find_element_by_class_name("center.dc_srch_trgt").text
+            except:
+                article_title_text = ''
+            if article_title_text:
+                article_title = article_title_tag + ' - ' + article_title_text
+            else:
+                article_title = article_title_tag
+    
+            if len(artcl) == 1:
+                article_body = driver.find_elements_by_tag_name("p")
+                text = [x.text for x in article_body if x.text]
+                article_text = " ".join(text)
+                articles[article_title] = article_text
+            elif len(artcl) > 1:
+                paragraphs = OrderedDict()
+                for i in range(1, len(artcl)):
+                    artcl[i].click()
+                    time.sleep(timesleep)
+                    text = driver.find_element_by_class_name("dc_srch_trgt").text
+                    paragraphs[i] = text
+                articles[article_title] = paragraphs
+            time.sleep(timesleep)
+    
+        chapters[initial_title] = articles
+        
+    document["body"] = chapters
+
+document["identity"] = IDENTITY
+document["title"] = TITLE
+document["prereq"] = PREREQ
+#document["body"] = chapters
+
+
+documents_json = json.dumps(document)
+with open("kodiko_data.json", 'w', encoding='utf-8') as fp:
+    json.dump(document, fp, ensure_ascii=False)
+
+    
+with open("kodiko_data.json", "r", encoding='utf-8') as s:
+    data = json.load(s)
 
 
 
-chapter_elements = driver.find_elements_by_xpath("//body/div[@id='app']/div[@id='wrapper']/div[@id='sidebar-wrapper']/div[@id='document_navigation']/ul/li/ul/li/ul/li")
 
 
-chapters = OrderedDict()
 
-for ele in chapter_elements:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for ele in inner_body:
     
     chapter_body = ele.find_element_by_class_name("pointer").click()
-    time.sleep(2)
+    time.sleep(timesleep)
     chapter_title = driver.find_element_by_class_name("doc.relative").text.replace("\n", " - ")
-
+    
+    
     
     chapter_content = ele.find_element_by_tag_name("ul")
+    
     
     chapter_clickables = ele.find_elements_by_tag_name("span")
     chapter_clickables = [x for x in chapter_clickables if x.text != "[-]"]
@@ -256,12 +389,18 @@ for ele in chapter_elements:
     for artcl in chapter_articles_and_paragraphs:
         
         artcl[0].click()
-        time.sleep(2)
+        time.sleep(timesleep)
         
         article_title_element = driver.find_element_by_class_name("doc.relative")
         article_title_tag = article_title_element.find_element_by_class_name("center").text
-        article_title_text = article_title_element.find_element_by_class_name("center.dc_srch_trgt").text
-        article_title = article_title_tag + ' - ' + article_title_text
+        try:
+            article_title_text = article_title_element.find_element_by_class_name("center.dc_srch_trgt").text
+        except:
+            article_title_text = ''
+        if article_title_text:
+            article_title = article_title_tag + ' - ' + article_title_text
+        else:
+            article_title = article_title_tag
 
         if len(artcl) == 1:
             article_body = driver.find_elements_by_tag_name("p")
@@ -272,27 +411,48 @@ for ele in chapter_elements:
             paragraphs = OrderedDict()
             for i in range(1, len(artcl)):
                 artcl[i].click()
-                time.sleep(2)
+                time.sleep(timesleep)
                 text = driver.find_element_by_class_name("dc_srch_trgt").text
                 paragraphs[i] = text
             articles[article_title] = paragraphs
-        time.sleep(2)
-
+        time.sleep(timesleep)
 
     chapters[chapter_title] = articles
 
 
-document["identity"] = IDENTITY
-document["title"] = TITLE
-document["prereq"] = PREREQ
-document["body"] = chapters
 
 
-documents_json = json.dumps(document)
-with open("kodiko_data.json", 'w', encoding='utf-8') as fp:
-    json.dump(document, fp, ensure_ascii=False)
 
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
