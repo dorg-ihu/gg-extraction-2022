@@ -75,7 +75,7 @@ class IssueParser:
                 break
             l = l.replace('−\n', '')
             l = l.replace('-\n', '')
-            l = l.replace('\n', ' ')
+            # l = l.replace('\n', ' ')
             l = re.sub(r' +', ' ', l)
             l = helpers.fix_par_abbrev(l)
             tmp_lines.append(l)
@@ -263,7 +263,7 @@ class IssueParser:
             #     paragraphs[current].append(t.strip())
             
             for t in content:
-                x = re.match(r'^\d{1,2}[α-ωΑ-Ω]{,2}[)|.]', t.lstrip()[:7]) #x = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.', t.lstrip()[:6])
+                x = re.match(r'^\d{1,2}[α-ωΑ-Ω]{,2}[).]', t.lstrip()[:7]) #x = re.match(r'^\d+\.|^\d+\D+\)|^\d+\)|^\d+\D+\.', t.lstrip()[:6])
                 if x:
                     current = re.sub("[^0-9]", "", x.group())
                     self.digitmatches.append(x.group())

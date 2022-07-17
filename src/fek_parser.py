@@ -1,10 +1,12 @@
 import fitz
 import re
 from gm3.gm3.pparser import IssueParser
+from src import dictionaries as dc
+
 
 class PreParser:
     """
-    
+    Preprocess FEK issues and convert from PDF to TXT
     """
     def __init__(self) -> None:
         pass
@@ -139,6 +141,103 @@ class FekParser(IssueParser):
     """
     def __init__(self, filename, stdin=False, toTxt=False):
         super().__init__(filename, stdin, toTxt)
+    
+
+    def check_duplicate_pars(self, pars):
+        '''
+        Check if there are duplicates in paragraphs due to cases with same numbering as paragraphs
+        '''
+
+        int_pars = [item for item in pars if item.isdigit()]
+
+        return not len(set(int_pars)) == len(int_pars)
+    
+
+    def get_paragraph_levels(self, items):
+        levels = []
+        for i, item in enumerate(items):
+            if item in dc.alphabet:
+                levels.append(0)  # alphabet
+            elif item in dc.ab_double_combs:
+                levels.append(1)  # ab combinations
+            elif item in dc.latin_numbers:
+                levels.append(2)  # latin numbers
+            elif item in dc.numbers:
+                levels.append(3)  #
+        return levels
+
+    
+    def par_split_ids_with_duplicates(self, text):
+        par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
+
+        q = re.findall(par_pattern,text)  # get all listed keys
+
+        levels = self.get_paragraph_levels(q)
+
+        # get first level indices for numbers
+        ak = 0
+        level_0 = levels[0]
+        level_0_inds = []
+        is_correct = True
+        for i in range(len(q)):
+            if (levels[i] == level_0) and is_correct:
+                if q[i] == dc.numbers[ak]:
+                    level_0_inds.append(i)
+                    ak += 1
+                else:
+                    qk = 0
+                    if q[i] == dc.numbers[qk]:
+                        # current_level = levels[i]
+                        is_correct = False
+                    else:
+                        if q[i] == dc.numbers[ak]:
+                            level_0_inds.append(i)
+                            ak += 0
+                            is_correct = True
+        level_0_inds += [len(levels)]
+        return par_pattern, level_0_inds
+            
+    
+
+    def find_article_paragraphs(self, text):
+        '''
+        Split article into paragraphs and return them as a dict
+        '''
+        
+        pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
+        pars = re.split(pattern, text)
+        pars = [item.lstrip() for item in pars]
+
+        has_duplicate_num = self.check_duplicate_pars(pars)
+
+        if not has_duplicate_num:
+            level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
+        else:
+            par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+
+
+            par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
+            par_dict = {}
+            if par_splits[0] in dc.all_combs:
+                par_splits.insert(0, "")
+
+            par_dict['0'] = par_splits[0]
+
+            # Split paragraphs based on the ids
+            for j in range(len(level_0_inds)-1):
+                par_split = par_splits[2*level_0_inds[j]+1:2*level_0_inds[j+1]+1]
+                par = ""
+                for k in range(0, len(par_split)-1, 2):
+                    par += f"\n{par_split[k]}. {par_split[k+1]}"
+
+                par = par.strip()
+                par_dict[str(j+1)] = par
+            
+            return par_dict
+
+
+
+
 
 
 
