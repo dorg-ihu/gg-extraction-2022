@@ -233,7 +233,7 @@ class FekParser(IssueParser):
                 par = par.strip()
                 par_dict[str(j+1)] = par
             
-            return par_dict
+        return par_dict
 
 
 
