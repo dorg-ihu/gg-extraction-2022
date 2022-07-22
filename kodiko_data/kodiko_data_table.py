@@ -10,6 +10,15 @@ import pandas as pd
 import numpy as np
 import json
 from tqdm import tqdm
+import logging
+
+logging.basicConfig(
+    filename='extraction.log',
+    filemode='a',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
 
 
 def main(hrefdata):
@@ -41,63 +50,70 @@ def main(hrefdata):
         identity = identity_class.text
         time.sleep(timesleep)
         
-        # Get levels for each items as a tuple (eg. ("Κεφάλαιο", 0), (Άρθρο, 1))
-        q = driver.find_element_by_xpath('//*[@id="document_navigation"]/ul/li/ul/li[2]')
-        dynamic_list = []
-        def get_items_level(el, i=0):
-            children = el.find_elements_by_xpath("./ul/li[*]")  # get children
-            if children:
-                for child in children:
-                    tmp = child.find_element_by_xpath("./div")
-                    attr = tmp.get_attribute('data-name')
-                    dynamic_list.append((attr, i))
-                    get_items_level(child, i+1)
-        get_items_level(q)
-        
-        # Assert the elements in body section are equal to the levels computed above
-        assert len(clickables) == len(dynamic_list)
-        
-        # Iterate through each element, click it and get its details [key, level, title, content]
-        for i in range(len(clickables)):
-            clickables[i].click()
-            time.sleep(timesleep)
-            key, level = dynamic_list[i][0], dynamic_list[i][1]
-        
-            if "Παρ" in key:
-                content = driver.find_element_by_class_name("dc_srch_trgt").text
-                row = {"identity": identity, "key": key, "title": np.NaN, "content": content, "level": level}
-            else:
-                basic_el = driver.find_element_by_class_name("doc.relative")
-                if i+1 < len(clickables): next_key = dynamic_list[i+1][0]
-                if "Άρθρο" in key and "Παρ" not in next_key:
-                    try:
-                        title = basic_el.find_element_by_class_name("center.dc_srch_trgt").text
-                    except:
-                        title = np.NaN
-                    try:
-                        content = basic_el.find_element_by_xpath("./div[@class='dc_srch_trgt']").text
-                    except:
-                        content = np.NaN
-                    row = {"identity": identity, "key": key, "title": title, "content": content, "level": level}
+        try:
+            # Get levels for each items as a tuple (eg. ("Κεφάλαιο", 0), (Άρθρο, 1))
+            q = driver.find_element_by_xpath('//*[@id="document_navigation"]/ul/li/ul/li[2]')
+            dynamic_list = []
+            def get_items_level(el, i=0):
+                children = el.find_elements_by_xpath("./ul/li[*]")  # get children
+                if children:
+                    for child in children:
+                        tmp = child.find_element_by_xpath("./div")
+                        attr = tmp.get_attribute('data-name')
+                        dynamic_list.append((attr, i))
+                        get_items_level(child, i+1)
+            get_items_level(q)
+            
+            # Assert the elements in body section are equal to the levels computed above
+            assert len(clickables) == len(dynamic_list)
+            
+            # Iterate through each element, click it and get its details [key, level, title, content]
+            for i in range(len(clickables)):
+                clickables[i].click()
+                time.sleep(timesleep)
+                key, level = dynamic_list[i][0], dynamic_list[i][1]
+            
+                if "Παρ" in key:
+                    content = driver.find_element_by_class_name("dc_srch_trgt").text
+                    row = {"identity": identity, "key": key, "title": np.NaN, "content": content, "level": level}
                 else:
+                    basic_el = driver.find_element_by_class_name("doc.relative")
                     try:
-                        title = basic_el.find_element_by_class_name("center.dc_srch_trgt").text
+                        if i+1 < len(clickables): next_key = dynamic_list[i+1][0]
                     except:
-                        title = np.NaN
-                    try:
-                        intro = basic_el.find_element_by_xpath("./div[@class='dc_srch_trgt']").text
-                    except:
-                        intro = np.NaN
-        
-                    if title and intro:
-                        row = {"identity": identity, "key": key, "title": title, "content": intro, "level": level}
-                    elif title:
-                        row = {"identity": identity, "key": key, "title": title, "content": np.NaN, "level": level}
-                    elif intro:
-                        row = {"identity": identity, "key": key, "title": np.NaN, "content": intro, "level": level}
+                        next_key = ""  # in case of only one article in the document
+                    if "Άρθρο" in key and "Παρ" not in next_key:
+                        try:
+                            title = basic_el.find_element_by_class_name("center.dc_srch_trgt").text
+                        except:
+                            title = np.NaN
+                        try:
+                            content = basic_el.find_element_by_xpath("./div[@class='dc_srch_trgt']").text
+                        except:
+                            content = np.NaN
+                        row = {"identity": identity, "key": key, "title": title, "content": content, "level": level}
                     else:
-                        row = {"identity": identity, "key": key, "title": np.NaN, "content": np.NaN, "level": level}
-            listOfRows.append(row)
+                        try:
+                            title = basic_el.find_element_by_class_name("center.dc_srch_trgt").text
+                        except:
+                            title = np.NaN
+                        try:
+                            intro = basic_el.find_element_by_xpath("./div[@class='dc_srch_trgt']").text
+                        except:
+                            intro = np.NaN
+            
+                        if title and intro:
+                            row = {"identity": identity, "key": key, "title": title, "content": intro, "level": level}
+                        elif title:
+                            row = {"identity": identity, "key": key, "title": title, "content": np.NaN, "level": level}
+                        elif intro:
+                            row = {"identity": identity, "key": key, "title": np.NaN, "content": intro, "level": level}
+                        else:
+                            row = {"identity": identity, "key": key, "title": np.NaN, "content": np.NaN, "level": level}
+                listOfRows.append(row)
+        except:
+            logging.info(identity)  # catch the document with the issue
+            raise Exception
     return pd.DataFrame(listOfRows)
 
 
