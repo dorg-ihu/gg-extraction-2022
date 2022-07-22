@@ -80,6 +80,7 @@ def main(hrefdata):
                     basic_el = driver.find_element_by_class_name("doc.relative")
                     try:
                         if i+1 < len(clickables): next_key = dynamic_list[i+1][0]
+                        tmp = next_key.copy()
                     except:
                         next_key = ""  # in case of only one article in the document
                     if "Άρθρο" in key and "Παρ" not in next_key:
