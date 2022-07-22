@@ -1,5 +1,7 @@
 import time
 from selenium import webdriver
+from webdriver_manager.firefox import GeckoDriverManager
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -108,7 +110,9 @@ if __name__ == "__main__":
     
     options = Options()
     options.page_load_strategy = 'eager'
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Firefox(executable_path=GeckoDriverManager().install(), options=options)
+
+    # driver = webdriver.Firefox(options=options)
     
     # Testing subset of urls_dict
     step, counter = 5, 1
@@ -119,10 +123,11 @@ if __name__ == "__main__":
         counter+=1
         data = data.append(new_data, ignore_index=True)
         
-        if (counter*step % 1000) == 0:
-            title = str(counter*step) + "urls.csv"
-            data.to_csv(title, encoding="utf-8", index=False)
-    data.to_csv("final_kodiko_data", encoding="utf-8", index=False)
+        if (counter*step % 500) == 0:
+            title = "final_kodiko_data.csv"
+            data.to_csv(title, encoding="utf-8", index=False, mode="a")
+            data = pd.DataFrame(columns=["id", "key", "title", "content", "level"])
+    # data.to_csv("final_kodiko_data.csv", encoding="utf-8", index=False)
 
 
 
