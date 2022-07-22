@@ -9,6 +9,7 @@ from selenium.webdriver.firefox.options import Options
 import pandas as pd
 import numpy as np
 import json
+from tqdm import tqdm
 
 
 def main(hrefdata):
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     
     # Testing subset of urls_dict
     step, counter = 5, 1
-    for i in range(0, len(hrefdata), step):
+    for i in tqdm(range(0, len(hrefdata), step)):
         dummyhrefdata = {k: hrefdata[k] for k in list(hrefdata.keys())[i:i+step]}
         new_data = main(dummyhrefdata)
         print("So far {} urls have been processed".format(counter*step))
