@@ -122,7 +122,7 @@ if __name__ == "__main__":
         if (counter*step % 1000) == 0:
             title = str(counter*step) + "urls.csv"
             data.to_csv(title, encoding="utf-8", index=False)
-
+    data.to_csv("final_kodiko_data", encoding="utf-8", index=False)
 
 
 
