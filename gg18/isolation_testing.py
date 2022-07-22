@@ -39,7 +39,7 @@ fekpaths = [
 #     textParser.pdf2text(path, savefile=True)
 
 
-fekParser = FekParser('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
+fekParser = FekParser('fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.txt')
 articless = fekParser.articles
 paragraphss = fekParser.articles_as_paragraphs
 lines = fekParser.lines
