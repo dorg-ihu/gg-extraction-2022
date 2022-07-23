@@ -29,31 +29,31 @@ def main(hrefdata):
     listOfRows = []
     for k, v in hrefdata.items():
         
-        # Iterate through each url
-        url = v[0]
-        driver.get(url)
-        time.sleep(timesleep)
-        
-        # Try to click accept the conditions button
         try:
-            WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
-        except:
-            pass
+            # Iterate through each url
+            url = v[0]
+            driver.get(url)
+            time.sleep(timesleep)
+            
+            # Try to click accept the conditions button
+            try:
+                WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.XPATH, ".//button[@class='btn btn-success pull-right']"))).click()
+            except:
+                pass
+            
+            # Find the clickable elements inside body section and skip the whole issue if does not contain any info
+            try:
+                body = driver.find_element_by_xpath("//body/div[@id='app']/div[@id='wrapper']/div[@id='sidebar-wrapper']/div[@id='document_navigation']/ul/li/ul/li/ul[1]")
+            except:
+                continue # skip if we cannot find body content
+            clickables = body.find_elements_by_tag_name("span")
+            clickables = [x for x in clickables if "[-]" not in x.text]
+            
+            # Find identity of Issue (eg. "Π.Δ. 11/2022")
+            identity_class = driver.find_element_by_css_selector("h1[class='center left-md']")
+            identity = identity_class.text
+            time.sleep(timesleep)
         
-        # Find the clickable elements inside body section and skip the whole issue if does not contain any info
-        try:
-            body = driver.find_element_by_xpath("//body/div[@id='app']/div[@id='wrapper']/div[@id='sidebar-wrapper']/div[@id='document_navigation']/ul/li/ul/li/ul[1]")
-        except:
-            continue # skip if we cannot find body content
-        clickables = body.find_elements_by_tag_name("span")
-        clickables = [x for x in clickables if "[-]" not in x.text]
-        
-        # Find identity of Issue (eg. "Π.Δ. 11/2022")
-        identity_class = driver.find_element_by_css_selector("h1[class='center left-md']")
-        identity = identity_class.text
-        time.sleep(timesleep)
-        
-        try:
             # Get levels for each items as a tuple (eg. ("Κεφάλαιο", 0), (Άρθρο, 1))
             q = driver.find_element_by_xpath('//*[@id="document_navigation"]/ul/li/ul/li[2]')
             dynamic_list = []
@@ -121,7 +121,7 @@ def main(hrefdata):
             #     {"identity": identity, "key": np.NaN, "title": np.NaN, "content": np.NaN, "level": np.NaN}
             # )
 
-            errors = pd.DataFrame(data=[[identity]], columns=["id"])
+            errors = pd.DataFrame(data=[[url]], columns=["id"])
             errors.to_csv(error_identities_path, index=False, header=False, mode="a")
 
 
