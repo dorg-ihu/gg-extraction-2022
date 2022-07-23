@@ -13,12 +13,15 @@ from tqdm import tqdm
 import logging
 
 logging.basicConfig(
-    filename='extraction.log',
+    filename='scraping.log',
     filemode='a',
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+errors = pd.DataFrame(columns=["id"])
+error_identities_path = "error_identities.csv"
+errors.to_csv(error_identities_path, index=False, mode="w")
 
 
 def main(hrefdata):
@@ -112,16 +115,26 @@ def main(hrefdata):
                         else:
                             row = {"identity": identity, "key": key, "title": np.NaN, "content": np.NaN, "level": level}
                 listOfRows.append(row)
-        except:
-            logging.info(identity)  # catch the document with the issue
-            raise Exception
+        except Exception as exc:
+            logging.error(exc)  # catch the error of document with issue
+            # listOfRows = listOfRows.append(
+            #     {"identity": identity, "key": np.NaN, "title": np.NaN, "content": np.NaN, "level": np.NaN}
+            # )
+
+            errors = pd.DataFrame(data=[[identity]], columns=["id"])
+            errors.to_csv(error_identities_path, index=False, header=False, mode="a")
+
+
     return pd.DataFrame(listOfRows)
 
 
 if __name__ == "__main__":
     start = time.time()
     timesleep = 0.6
-    data = pd.DataFrame(columns=["id", "key", "title", "content", "level"])
+    
+    data = pd.DataFrame(columns=["identity", "key", "title", "content", "level"])
+    kodiko_data_savepath = "final_kodiko_data.csv"
+    data.to_csv(kodiko_data_savepath, index=False, mode="w")
     
     with open("kodiko_href.json", "r", encoding='utf-8') as s:
         hrefdata = json.load(s)
@@ -141,10 +154,9 @@ if __name__ == "__main__":
         counter+=1
         data = data.append(new_data, ignore_index=True)
         
-        if (counter*step % 500) == 0:
-            title = "final_kodiko_data.csv"
-            data.to_csv(title, encoding="utf-8", index=False, mode="a")
-            data = pd.DataFrame(columns=["id", "key", "title", "content", "level"])
+        if (counter*step % 100) == 0:
+            data.to_csv(kodiko_data_savepath, encoding="utf-8", index=False, mode="a")
+            data = pd.DataFrame(columns=["identity", "key", "title", "content", "level"])
     # data.to_csv("final_kodiko_data.csv", encoding="utf-8", index=False)
 
 
