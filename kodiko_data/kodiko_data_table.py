@@ -21,7 +21,7 @@ logging.basicConfig(
 
 errors = pd.DataFrame(columns=["id"])
 error_identities_path = "error_identities.csv"
-errors.to_csv(error_identities_path, index=False, mode="w")
+errors.to_csv(error_identities_path, index=False, mode="a")
 
 
 def main(hrefdata):
@@ -116,6 +116,7 @@ def main(hrefdata):
                             row = {"identity": identity, "key": key, "title": np.NaN, "content": np.NaN, "level": level}
                 listOfRows.append(row)
         except Exception as exc:
+            logging.error(f"error in url: {url}")
             logging.error(exc)  # catch the error of document with issue
             # listOfRows = listOfRows.append(
             #     {"identity": identity, "key": np.NaN, "title": np.NaN, "content": np.NaN, "level": np.NaN}
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     
     data = pd.DataFrame(columns=["identity", "key", "title", "content", "level"])
     kodiko_data_savepath = "final_kodiko_data.csv"
-    data.to_csv(kodiko_data_savepath, index=False, mode="w")
+    data.to_csv(kodiko_data_savepath, index=False, mode="a")
     
     with open("kodiko_href.json", "r", encoding='utf-8') as s:
         hrefdata = json.load(s)
@@ -148,16 +149,18 @@ if __name__ == "__main__":
     # Testing subset of urls_dict
     step, counter = 5, 1
     for i in tqdm(range(0, len(hrefdata), step)):
+
         dummyhrefdata = {k: hrefdata[k] for k in list(hrefdata.keys())[i:i+step]}
         new_data = main(dummyhrefdata)
         print("So far {} urls have been processed".format(counter*step))
         counter+=1
         data = data.append(new_data, ignore_index=True)
+       
         
         if (counter*step % 100) == 0:
-            data.to_csv(kodiko_data_savepath, encoding="utf-8", index=False, mode="a")
+            data.to_csv(kodiko_data_savepath, encoding="utf-8", index=False, mode="a", header=False)
             data = pd.DataFrame(columns=["identity", "key", "title", "content", "level"])
-    # data.to_csv("final_kodiko_data.csv", encoding="utf-8", index=False)
+    
 
 
 
