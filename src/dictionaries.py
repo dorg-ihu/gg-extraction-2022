@@ -15,3 +15,5 @@ t = alphabet.pop(13) # remove ν. due to laws
 all_combs = alphabet + ab_combs + double_combs + latin_numbers + numbers
 ab_double_combs = ab_combs + double_combs
 all_combs_pat = "(" + "|".join(all_combs) + ")"
+
+split_all_pattern = rf"[\n ]\(?{all_combs_pat}[).] *"

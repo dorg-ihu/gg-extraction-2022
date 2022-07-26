@@ -1,3 +1,4 @@
+from typing import final
 import fitz
 import re
 from gm3.gm3.pparser import IssueParser
@@ -198,7 +199,6 @@ class FekParser(IssueParser):
         return par_pattern, level_0_inds
             
     
-
     def find_article_paragraphs(self, text):
         '''
         Split article into paragraphs and return them as a dict
@@ -234,6 +234,16 @@ class FekParser(IssueParser):
                 par_dict[str(j+1)] = par
             
         return par_dict
+    
+
+    def split_all(self, text):
+        
+        splits = re.split(dc.split_all_pattern, text)
+        if splits[0] in dc.all_combs:
+            splits.insert(0, "")
+        
+        final_splits = [splits[i] for i in range(0, len(splits), 2)]
+        return final_splits
 
 
 
