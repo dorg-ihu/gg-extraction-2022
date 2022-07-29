@@ -242,7 +242,8 @@ class FekParser(IssueParser):
         if splits[0] in dc.all_combs:
             splits.insert(0, "")
         
-        final_splits = [splits[i] for i in range(0, len(splits), 2)]
+        final_splits = [f"{splits[i-1]}) {splits[i]}" for i in range(2, len(splits), 2)]
+        final_splits.insert(0, splits[0])
         return final_splits
 
 
