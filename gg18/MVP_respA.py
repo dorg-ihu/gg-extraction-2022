@@ -4,14 +4,12 @@ from gg18.ggHelper import Helper
 from gg18.respAclassifier import paragraphClf
 from src.fek_parser import FekParser
 
-
-class RespExtractor(object):
+class RespaExtractor(object):
     
-    def __init__(self, txtpath):
+    def __init__(self, txtpath, text):
     		self.standard_paorg_detect_accuracy = 0.65
     		self.acronym_paorg_detect_accuracy = 0.85
     		self.__illegal_chars = compile(r"\d+")
-            
     		##################################################
     		## Το be constantly expanded (lots of variants) ##
     		##################################################
@@ -40,10 +38,10 @@ class RespExtractor(object):
     		self.article_keys = ["Άρθρο"]
     		self.last_article_keys = ["Έναρξη Ισχύος", "Έναρξη ισχύος", "Η ισχύς του παρόντος", "EΝΑΡΞΗ ΙΣΧΥΟΣ"]
     		self.fekParser = FekParser(txtpath)
-    		#self.paorg_pres_decree_txt = text
+    		self.text = text
     		return
     
-    def get_dec_prereqs(self, txt):
+    def get_dec_prereqs(self):
     		"""
 			Return dictionary (or list if txt is peculiar) of the prerequisites 
 			of each decision.
@@ -69,7 +67,7 @@ class RespExtractor(object):
 			@TODO:
 			1. Generalize for different issues
 			"""
-    		txt = Helper.clean_up_txt(txt)
+    		txt = Helper.clean_up_txt(self.txt)
     		
     		dec_prereq_keys = self.dec_prereq_keys
     		dec_init_keys = self.dec_init_keys
@@ -90,7 +88,7 @@ class RespExtractor(object):
     		return dec_prereqs
     
     
-    def get_articles(self, txt):
+    def get_articles(self):
     	""" 
     		Return a dictionary of articles contained within a GG Issue.
     		
@@ -108,13 +106,13 @@ class RespExtractor(object):
     		} 
     	"""
     	articles = []
-    	if txt: 
+    	if self.txt: 
     		articles = findall(r"({artcl}\s*\d+\s*\n.+?)(?={artcl}\s*\d+\s*\n)"\
-    						.format(artcl=self.article_keys[0]), txt, flags=DOTALL)
+    						.format(artcl=self.article_keys[0]), self.txt, flags=DOTALL)
     		last_article = findall(r"({artcl}\s*\d+\s*\n(?:{last_article}).+?\.\s*\n)"\
     						.format(artcl=self.article_keys[0], 
     								last_article=Helper.get_special_regex_disjunction(self.last_article_keys)), 
-    						txt, flags=DOTALL)
+    						self.txt, flags=DOTALL)
     		
     		if last_article:
     			assert(len(last_article) >= 1)
@@ -122,17 +120,17 @@ class RespExtractor(object):
     		return dict(zip(range(1, len(articles) + 1), articles))
     
     
-    def get_paragraphs(self, txt):
-    	txt = Helper.clean_up_txt(txt)
-    	txt = Helper.remove_txt_prelims(txt)
+    def get_paragraphs(self):
+    	text = Helper.clean_up_txt(self.txt)
+    	text = Helper.remove_txt_prelims(text)
     	# txt = Helper.codify_list_points(txt)
     	paragraphs = []
-    	if txt:
-    		paragraphs = findall(r"\n?\s*([Ά-ΏΑ-Ωα-ωά-ώBullet\d+\(•\-\−]+[\.\)α-ω ][\s\S]+?(?:[\.\:](?=\s*\n)|\,(?=\s*\n(?:[α-ω\d]+[\.\)]|Bullet))))", txt)
+    	if text:
+    		paragraphs = findall(r"\n?\s*([Ά-ΏΑ-Ωα-ωά-ώBullet\d+\(•\-\−]+[\.\)α-ω ][\s\S]+?(?:[\.\:](?=\s*\n)|\,(?=\s*\n(?:[α-ω\d]+[\.\)]|Bullet))))", text)
     	return paragraphs
     
     
-    def get_units_and_respas_following_respas_decl(self, paorg_pres_decree_txt):
+    def get_units_and_respas_following_respas_decl(self):
     		"""  
     			Return a dictionary of rough Organization Unit - RespA associations
     			mentioned as a RespA declaration followed by a Unit-RespAs list.
@@ -185,6 +183,7 @@ class RespExtractor(object):
     			}
     		"""
     		paragraph_clf = paragraphClf()
+    		#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
     		articles = self.fekParser.articles
     		units_and_respas_following_respas_decl = OrderedDict()
     		units_threshold = 100
@@ -264,6 +263,28 @@ class RespExtractor(object):
     							units_counter += 1
     			return
     	
+            
+        
+    		 # if articles:
+    		 # 	if isinstance(articles, dict): articles = list(articles.values())
+    		 # 	for artcl in articles:
+    		 # 		artcl_paragraphs = self.get_paragraphs(artcl)
+    		 # 		set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
+    		 # else:
+    		 # 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    		 # 	set_units_and_respas_following_respas_decl_dict(paragraphs)
+    		
+    		# if articles_as_paragraphs:
+    		# 	for artcl in articles_as_paragraphs.values():
+    		# 		artcl_paragraphs = []
+    		# 		for k, v in artcl.items():
+    		# 			artcl_paragraphs.append(v)
+    		# 		set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
+    				
+    		# else:
+    		# 	paragraphs = self.get_paragraphs(self.txt)
+    		# 	set_units_and_respas_following_respas_decl_dict(paragraphs)
+            
     		if articles:
     			if isinstance(articles, dict): articles = list(articles.values())
     			for artcl in articles:
@@ -276,7 +297,7 @@ class RespExtractor(object):
     		return units_and_respas_following_respas_decl
     
     
-    def get_units_followed_by_respas(self, paorg_pres_decree_txt):
+    def get_units_followed_by_respas(self):
     		"""  
     			Return a dictionary of rough Organization Unit - RespA associations
     			mentioned as a Unit followed by a list of RespAs.
@@ -307,6 +328,7 @@ class RespExtractor(object):
     		paragraph_clf = paragraphClf()
     		respas_threshold = 60
     		units_followed_by_respas = OrderedDict()
+    		#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
     		articles = self.fekParser.articles
     		
     		def set_units_followed_by_respas_dict(paragraphs, respas_threshold):
@@ -349,6 +371,25 @@ class RespExtractor(object):
     						units_counter += 1
     			return 
     
+    		# if articles:
+    		# 	if isinstance(articles, dict): articles = list(articles.values())
+    		# 	for artcl in articles:
+    		# 		artcl_paragraphs = self.get_paragraphs(artcl)
+    		# 		set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
+    		# else:
+    		# 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    		# 	set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
+    		
+    		# if articles_as_paragraphs:
+    		# 	for artcl in articles_as_paragraphs.values():
+    		# 		artcl_paragraphs = []
+    		# 		for k, v in artcl.items():
+    		# 			artcl_paragraphs.append(v)
+    		# 		set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
+    				
+    		# else:
+    		# 	paragraphs = self.get_paragraphs(self.txt)
+    		# 	set_units_followed_by_respas_dict(paragraphs, respas_threshold)
     		if articles:
     			if isinstance(articles, dict): articles = list(articles.values())
     			for artcl in articles:
@@ -357,14 +398,15 @@ class RespExtractor(object):
     		else:
     			paragraphs = self.fekParser.split_all(self.text)
     			set_units_followed_by_respas_dict(paragraphs, respas_threshold)
-    
+
+            
     		return units_followed_by_respas
     
     
-    def get_units_and_respas(self, paorg_pres_decree_txt):
+    def get_units_and_respas(self):
     	""" 
     		Return dictionary of rough Organization Unit - RespA associations
-    		mentioned in single paragraphs.
+    		mentioned in SINGLE PARAGRAPHS.
     		
     		@param paorg_pres_decree_txt: GG Presidential Decree Organization Issue
     									  e.g. "ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 18 
@@ -396,6 +438,8 @@ class RespExtractor(object):
 
     	"""
     	paragraph_clf = paragraphClf()
+    	#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
+        #articles = self.get_articles(paorg_pres_decree_txt)
     	articles = self.fekParser.articles
     	additional_respas_threshold = 6
     	units_and_respas = OrderedDict()
@@ -434,6 +478,27 @@ class RespExtractor(object):
     					units_and_respas[unit] = respas
     		return 
     				
+    	# if articles:
+    	# 	if isinstance(articles, dict): articles = list(articles.values())
+    	# 	for artcl in articles:
+    	# 		artcl_paragraphs = self.get_paragraphs(artcl)
+    	# 		units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
+    	# 	units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
+    	# else:
+    	# 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    	# 	units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
+    	
+    	# if articles_as_paragraphs:
+    	# 	for artcl in articles_as_paragraphs.values():
+    	# 		artcl_paragraphs = []
+    	# 		for k, v in artcl.items():
+    	# 			artcl_paragraphs.append(v)
+    	# 		units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
+    	# 	units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
+    	# else:
+    	# 	paragraphs = self.get_paragraphs(self.txt)
+    	# 	units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
+    	
     	if articles:
     		if isinstance(articles, dict): articles = list(articles.values())
     		for artcl in articles:
@@ -441,16 +506,17 @@ class RespExtractor(object):
     			units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
     		units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
     	else:
+    		#paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
     		paragraphs = self.fekParser.split_all(self.text)
     		units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
-
+    	
     	unit_and_respa_sections = [x for x in units_and_respa_sections if x]
     	disentangle_units_from_respas(units_and_respa_sections)
     	print('disentangled_units: ', unit_and_respa_sections)
     	return units_and_respas
     
     
-    def get_rough_unit_respa_associations(self, paorg_pres_decree_txt, format=''):
+    def get_rough_unit_respa_associations(self, format=''):
     	"""
     		Return a dictionary of rough Organization Unit - RespA associations
 
@@ -463,9 +529,9 @@ class RespExtractor(object):
     											Οργανισμός Υπουργείου Πολιτισμού και Αθλη-
     											τισμού." etc.
      	"""
-    	units_and_respas = self.get_units_and_respas(paorg_pres_decree_txt)
-    	units_followed_by_respas = self.get_units_followed_by_respas(paorg_pres_decree_txt)
-    	units_and_respas_following_respas_decl = self.get_units_and_respas_following_respas_decl(paorg_pres_decree_txt)
+    	units_and_respas = self.get_units_and_respas()
+    	units_followed_by_respas = self.get_units_followed_by_respas()
+    	units_and_respas_following_respas_decl = self.get_units_and_respas_following_respas_decl()
 
     	units_and_respas.update(units_followed_by_respas)
     	units_and_respas.update(units_and_respas_following_respas_decl)
@@ -476,50 +542,6 @@ class RespExtractor(object):
     	elif format.lower() == 'xml':
     		return Helper.get_xml(rough_unit_respa_associations)
     	return rough_unit_respa_associations 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     

@@ -55,7 +55,8 @@ unique_digitmatches = set(digitmatches)
 
 
 from gg18.gm3respA import RespaExtractor
-respaParser = RespaExtractor('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
+#respaParser = RespaExtractor('fek-organismoi-upourgeiwn/yp-tourismou-127-2017.txt')
+respaParser = RespaExtractor('fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.txt')
 allrespas = respaParser.get_rough_unit_respa_associations()
 
 
@@ -63,19 +64,16 @@ from src.fek_parser import PreParser
 from gg18.respA import RespExtractor
 respParser = RespExtractor()
 textparser = PreParser()
-text = textparser.pdf2text("fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf")
+#text = textparser.pdf2text("fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf")
+text = textparser.pdf2text("fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf")
+#text = textparser.pdf2text("fek-organismoi-upourgeiwn/yp-eswterikwn-141-2017.pdf")
+arts = respParser.get_articles(text)
+# pars1 = respParser.get_paragraphs(arts[20])
+# pars2 = respParser.get_paragraphs(arts[2])
+#yp-dikaiosunhs-6-2021
 allrespasgg18 = respParser.get_rough_unit_respa_associations(text)
-
-
-
-
-
-
-
-
-
-
-
+a = respParser.get_units_and_respas_following_respas_decl(text)
+b = respParser.
 
 #%% test digit regex
 #λαλακκκκ
@@ -133,27 +131,10 @@ r = ner.extract_entities(paragraph[0])
 r.ents
 
 
-export = pd.DataFrame([])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 exampletext = 'Το Τμήμα Χωροταξίας και το Τμήμα Ψυχαγωγίας είναι στον ίδιο όροφο του'
 exampleresult = ner.extract_entities(exampletext)
 print(exampleresult.ents)
 ner.visualise_entities(exampleresult)
-
-
 
 
 exampletext2 = 'Γενική Διεύθυνση Οικονομικών και Διοικητικών Υπηρεσιών και Κάτι Ακόμα'
@@ -161,13 +142,10 @@ exampleresult2 = ner.extract_entities(exampletext2)
 print(exampleresult2.ents)
 ner.visualise_entities(exampleresult)
 
-
 txt = '2.α. Γενική Γραμματεία Υπουργείου Οικονομικών (α) Υπηρεσίες που υπάγονται στο Διοικητικό Γραμματέα (αα) Αυτοτελές Τμήμα Πολιτικής Σχεδίασης Εκτάκτου Ανάγκης (Π.Σ.Ε.Α.) (ββ) Αυτοτελές Τμήμα Κοινοβουλευτικού Ελέγχου (γγ) Αυτοτελές Τμήμα Νομοθετικής Πρωτοβουλίας (δδ) Αυτοτελή Διεύθυνση Ανθρώπινου Δυναμικού και Οργάνωσης ΕΦΗΜΕΡΙΔΑ TΗΣ ΚΥΒΕΡΝΗΣΕΩΣ (β) Γενικές Διευθύνσεις (αα) Γενική Διεύθυνση Οικονομικών Υπηρεσιών β. Γενική Γραμματεία Πληροφοριακών Συστημάτων (α) Υπηρεσίες που υπάγονται στον Τομεακό Γραμματέα (αα) Αυτοτελές Τμήμα Στρατηγικής, Προγραμματισμού και Διαχείρισης Έργων (ββ) Αυτοτελές Τμήμα Ασφάλειας (β) Γενικές Διευθύνσεις (αα) Γενική Διεύθυνση Υποδομών Πληροφορικής και Επικοινωνιών (ββ) Γενική Διεύθυνση Ανάπτυξης και Παραγωγικής Λειτουργίας Πληροφοριακών Συστημάτων γ. Γενική Γραμματεία Οικονομικής Πολιτικής (α) Υπηρεσίες που υπάγονται στον Τομεακό Γραμματέα (αα) Κεντρική Μονάδα Κρατικών Ενισχύσεων (ββ) Μονάδα Αποκρατικοποιήσεων, Διαχείρισης Κινητών Αξιών και Επιχειρησιακού Σχεδιασμού (β) Γενικές Διευθύνσεις (αα) Γενική Διεύθυνση Οικονομικής Πολιτικής δ. Γενική Γραμματεία Δημοσιονομικής Πολιτικής (α) Υπηρεσίες που υπάγονται στον Τομεακό Γραμματέα (αα) Αυτοτελές Τμήμα Επιχειρησιακής Ανάλυσης και Υποστήριξης (β) Γενικές Διευθύνσεις (αα) Γενική Διεύθυνση Δημοσιονομικής Πολιτικής και Προϋπολογισμού (ββ) Γενική Διεύθυνση Θησαυροφυλακίου και Δημοσιονομικών Κανόνων (γγ) Γενική Διεύθυνση Δημοσιονομικών Ελέγχων (δδ) Γενική Διεύθυνση Ελέγχων Συγχρηματοδοτούμενων Προγραμμάτων (εε) Γενική Διεύθυνση Χορήγησης Συντάξεων Δημοσίου Τομέα ε. Γενική Γραμματεία Δημόσιας Περιουσίας (α) Υπηρεσίες που υπάγονται στον Τομεακό Γραμματέα (αα) Αυτοτελές Γραφείο Ελληνικού (ββ) Αυτοτελές Τμήμα Μητρώου Ακίνητης Περιουσίας (β) Γενικές Διευθύνσεις (αα) Γενική Διεύθυνση Δημόσιας Περιουσίας και Κοινωφελών Περιουσιών στ. Ειδική Γραμματεία Σώματος Δίωξης Οικονομικού Εγκλήματος (α) Κεντρική Υπηρεσία (αα) Διεύθυνση Στρατηγικού Σχεδιασμού και Προγραμματισμού Ερευνών (ββ) Διεύθυνση Επιχειρησιακής Υποστήριξης (β) Επιχειρησιακή Διεύθυνση Σώματος Δίωξης Οικονομικού Εγκλήματος (Σ.Δ.Ο.Ε.) Αττικής (γ) Επιχειρησιακή Διεύθυνση Σ.Δ.Ο.Ε. Μακεδονίας '
 exampleresult2 = ner.extract_entities(txt)
 print(exampleresult2.ents)
 ner.visualise_entities(exampleresult2)
-
-
 
 
 import re
@@ -186,296 +164,31 @@ sum(1 for c in x[:5] if c.isupper())
 
 
 
+#%% mvp
 
 
-import fitz
-
-def reorder_first_page(self, texts):
-    """
-    There are cases where "ΕΦΗΜΕΡΙΔΑ ΤΗΣ ΚΥΒΕΡΝΗΣΕΩΣ" doesn't appear in the beginning.
-    This function detects such cases and reorders them in the beginning.
-    """
-
-    w = None
-    if not re.search(r"ΕΦΗΜΕΡΙ(Σ|ΔΑ)\s+ΤΗΣ\s+ΚΥΒΕΡΝΗΣΕΩΣ", texts[0]):
-        ind = 0
-        for i, block in enumerate(texts):
-            if re.search(r"ΕΦΗΜΕΡΙ(Σ|ΔΑ)\s+ΤΗΣ\s+ΚΥΒΕΡΝΗΣΕΩΣ", block):
-                ind = i
-                break
-
-        w = texts[i:]+texts[:i]
-    
-    return w
+from src.fek_parser import PreParser, FekParser
 
 
-def fix_article_errors(self, doc):
-    """
-    There are cases where an article appears like "Άρθ ρο".
-    The same happens in the next line and same index.
-    """
+from gg18.MVP_respA import RespaExtractor
+respas = RespaExtractor("fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf")
 
-    texts = doc.splitlines()
-
-    for i, text in enumerate(texts):
-
-        pattern = r'^Ά(\s*)ρ(\s*)θ(\s*)ρ(\s*)ο'
-        
-        q = re.search(pattern, text)
-        if q:
-            if not all(x == "" for x in q.groups()):
-                for j, item in enumerate(q.groups()):
-                    if item:
-                        ind = j+1
-                        break
-                texts[i] = texts[i][:ind] + texts[i][ind+1:]
-                texts[i+1] = texts[i+1][:ind] + texts[i+1][ind+1:]
-    
-    doc = "\n".join(texts)
-    
-    return doc
-
-
-def pdf2text(self, fekpath, savefile=True):
-    """
-    Convert PDF file to TXT with some preprocessing
-    """
-    # Parse PDF file in blocks
-    pages = []
-    with fitz.open(fekpath,) as doc:
-        for page in doc:
-            text = page.get_text("blocks")
-            pages.append(text)
-    
-    # Get text of each block and exclude signature information
-    pages = [[item[4] for item in page if not re.search(r"(Digitally signed|Signature)", item[4])] for page in pages]
-
-    # Fix problematic Δ representation. Even thought it seems the same, when converted to unicode has different value 
-    pages = [[re.sub(r"∆", r"Δ", item) for item in page] for page in pages]
-
-    # Reorder first page
-    pages[0] = self.reorder_first_page(pages[0])
-    # pages = [self.reorder_first_page(page) for page in pages]
-
-    doc = "".join(block for page in pages for block in page)
-
-    doc = self.fix_article_errors(doc)
-
-
-    doc = doc.replace("-\n", "")
-    doc = doc.replace("−\n", "")
-    
-
-
-    if savefile:
-        savepath = re.sub(r".pdf$", ".txt", fekpath)
-        with open(savepath, 'w', encoding='utf-8') as f:
-            f.write(doc)
-    
-    return doc
-
-
-
-
-span_list = []
-for block in page.getText("dict", flags=0)["blocks"]:  # a list of text block dictionaries
-    for line in block["lines"]:
-        for span in line["spans"]:
-            span_rect = fitz.Rect(span["bbox"])  # rect of span text
-            if span_rect not in table_rect:  # ensure outside table area
-                span_list.append((span_rect, span["text"]))
-# the span_list can now be processed as desired.
-
-
-
-pages = []
-fekpath = 'C:/Users/kostas/GitHub/edyte/gg-extraction-2022/fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf'
-with fitz.open(fekpath,) as doc:
-    for page in doc:
-        span_list = []
-        for block in page.getText("dict", flags=0)["blocks"]:  # a list of text block dictionaries
-            for line in block["lines"]:
-                for span in line["spans"]:
-                    span_rect = fitz.Rect(span["bbox"])  # rect of span text
-                    if span_rect not in table_rect:  # ensure outside table area
-                        span_list.append((span_rect, span["text"]))
-
-
-
-doc = fitz.open("C:/Users/kostas/GitHub/edyte/gg-extraction-2022/fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf")
-page = doc[86]
-hor_lines = []
-paths = page.getDrawings()
-for p in paths:
-    for item in p["items"]:
-        if item[0] == "l":  # this is a line item
-            p1 = item[1]  # start point
-            p2 = item[2]  # stop point
-            if p1.y == p2.y:  # line horizontal?
-                hor_lines.append(p1.y)
-
-doc.close()
-
-
-table_captions = []  # rectangles of table captions
-image_captions = []  # rectangles of image captions
-blocks = page.get_text("dict", flags=0)["blocks"]
-for b in blocks:
-    for l in b["lines"]:
-        if len(l["spans"]) != 1:
-            continue
-        for s in l["spans"]:
-            text = s["text"]
-            if text.startswith("Figure ") and ": " in text:
-                image_captions.append(fitz.Rect(s["bbox"]))
-            elif text.startswith("Table ") and ": " in text:
-                table_captions.append(fitz.Rect(s["bbox"]))
-
-
-
-
-
-
-
-
-
-s = 'Κα) λημερα που λέει ο λόγος ελπίζω να είστε καλά'
-
-
-def parenthesis_checking(s):
-    open_par, close_par = s.rfind("("), s.rfind(")")
-    print(open_par, close_par)
-    if open_par <= close_par:
-        return s
-    else:
-        return s + "TODO"
-
-
-print(parenthesis_checking(s))
-
-
-def reorder_first_page(texts):
-    """
-    There are cases where "ΕΦΗΜΕΡΙΔΑ ΤΗΣ ΚΥΒΕΡΝΗΣΕΩΣ" doesn't appear in the beginning.
-    This function detects such cases and reorders them in the beginning.
-    """
-
-    w = None
-    if not re.search(r"ΕΦΗΜΕΡΙ(Σ|ΔΑ)\s+ΤΗΣ\s+ΚΥΒΕΡΝΗΣΕΩΣ", texts[0]):
-        ind = 0
-        for i, block in enumerate(texts):
-            if re.search(r"ΕΦΗΜΕΡΙ(Σ|ΔΑ)\s+ΤΗΣ\s+ΚΥΒΕΡΝΗΣΕΩΣ", block):
-                ind = i
-                break
-
-        w = texts[i:]+texts[:i]
-    
-    return w
-
-
-def fix_article_errors(doc):
-    """
-    There are cases where an article appears like "Άρθ ρο".
-    The same happens in the next line and same index.
-    """
-
-    texts = doc.splitlines()
-
-    for i, text in enumerate(texts):
-
-        pattern = r'^Ά(\s*)ρ(\s*)θ(\s*)ρ(\s*)ο'
-        
-        q = re.search(pattern, text)
-        if q:
-            if not all(x == "" for x in q.groups()):
-                for j, item in enumerate(q.groups()):
-                    if item:
-                        ind = j+1
-                        break
-                texts[i] = texts[i][:ind] + texts[i][ind+1:]
-                texts[i+1] = texts[i+1][:ind] + texts[i+1][ind+1:]
-    
-    doc = "\n".join(texts)
-    
-    return doc
-
-def parenthesis_line_merging(doc):
-    texts = doc.splitlines()
-    new_texts = []
-    last_merged = False
-    for i, text in enumerate(texts):
-        if not last_merged:
-            open_par, close_par = text.rfind("("), text.rfind(")")
-            if open_par <= close_par:
-                new_texts.append(text)
-            else:
-                new_texts.append(texts[i] + texts[i+1])
-                last_merged = True
-        else:
-            last_merged = False
-            continue
-    doc = "\n".join(new_texts)
-    return doc
-
-def bracket_line_merging(doc):
-    texts = doc.splitlines()
-    new_texts = []
-    last_merged = False
-    for i, text in enumerate(texts):
-        if not last_merged:
-            open_par, close_par = text.rfind("["), text.rfind("]")
-            if open_par <= close_par:
-                new_texts.append(text)
-            else:
-                new_texts.append(texts[i] + texts[i+1])
-                last_merged = True
-        else:
-            last_merged = False
-            continue
-    doc = "\n".join(new_texts)
-    return doc      
-
-
-
-fekpath = 'fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf'
-#def pdf2text(self, fekpath, savefile=True):
-"""
-Convert PDF file to TXT with some preprocessing
-"""
-import fitz
 import re
-# Parse PDF file in blocks
-pages = []
-with fitz.open(fekpath,) as doc:
-    for page in doc:
-        text = page.get_text("blocks")
-        pages.append(text)
+from src.fek_parser import PreParser
+from gg18.MVP_respA import RespaExtractor
+# Step 1 pdx 2 text
+filepath = "fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf"
+text = PreParser().pdf2text(filepath)
+textpath = re.sub(r".pdf$", ".txt", filepath)
+# Step 2 text to respas
+respas = RespaExtractor(textpath, text).get_rough_unit_respa_associations()
 
-# Get text of each block and exclude signature information
-pages = [[item[4] for item in page if not re.search(r"(Digitally signed|Signature)", item[4])] for page in pages]
-
-# Fix problematic Δ representation. Even thought it seems the same, when converted to unicode has different value 
-pages = [[re.sub(r"∆", r"Δ", item) for item in page] for page in pages]
-
-# Reorder first page
-pages[0] = reorder_first_page(pages[0])
-# pages = [self.reorder_first_page(page) for page in pages]
-
-doc = "".join(block for page in pages for block in page)
-
-print(len(doc.splitlines()))
-doc = fix_article_errors(doc)
-
-
-doc = doc.replace("-\n", "")
-doc = doc.replace("−\n", "")
-print(len(doc.splitlines()))
-
-doc = parenthesis_line_merging(doc)
-print(len(doc.splitlines()))
-
-doc = bracket_line_merging(doc)
-print(len(doc.splitlines()))
+from src.fek_parser import PreParser
+from src.respa_extractor import RespExtractor
+filepath = "fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf"
+text = PreParser().pdf2text(filepath)
+textpath = re.sub(r".pdf$", ".txt", filepath)
+respas = RespExtractor(textpath).get_rough_unit_respa_associations(text)
 
 
 

@@ -27,7 +27,7 @@ class PreParser:
                     ind = i
                     break
 
-            w = texts[i:]+texts[:i]
+            w = texts[ind:]+texts[:ind]
         
         return w
     
