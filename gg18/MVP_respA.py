@@ -2,11 +2,11 @@ from re import compile, sub, findall, search, escape, DOTALL, match
 from collections import OrderedDict
 from gg18.ggHelper import Helper
 from gg18.respAclassifier import paragraphClf
-from src.fek_parser import FekParser, PreParser
+from src.fek_parser import FekParser
 
 class RespaExtractor(object):
     
-    def __init__(self, fekpath):
+    def __init__(self, txtpath, text):
     		self.standard_paorg_detect_accuracy = 0.65
     		self.acronym_paorg_detect_accuracy = 0.85
     		self.__illegal_chars = compile(r"\d+")
@@ -37,11 +37,8 @@ class RespaExtractor(object):
     		self.dec_correction_keys = ['Διόρθωση', 'ΔΙΌΡΘΩΣΗ']
     		self.article_keys = ["Άρθρο"]
     		self.last_article_keys = ["Έναρξη Ισχύος", "Έναρξη ισχύος", "Η ισχύς του παρόντος", "EΝΑΡΞΗ ΙΣΧΥΟΣ"]
-    		self.fekpath = fekpath
-    		#self.PreParser = PreParser()
-    		#self.txt = PreParser().pdf2text(self.fekpath)
-    		#self.txt = '123'
-    		self.fekParser = FekParser(self.fekpath)
+    		self.fekParser = FekParser(txtpath)
+    		self.text = text
     		return
     
     def get_dec_prereqs(self):
@@ -89,9 +86,6 @@ class RespaExtractor(object):
     																	txt, flags=DOTALL)
     			
     		return dec_prereqs
-    
-    
-    
     
     
     def get_articles(self):
@@ -189,7 +183,8 @@ class RespaExtractor(object):
     			}
     		"""
     		paragraph_clf = paragraphClf()
-    		articles_as_paragraphs = self.fekParser.articles_as_paragraphs
+    		#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
+    		articles = self.fekParser.articles
     		units_and_respas_following_respas_decl = OrderedDict()
     		units_threshold = 100
     		respas_threshold = 60
@@ -270,24 +265,33 @@ class RespaExtractor(object):
     	
             
         
-    		# if articles:
-    		# 	if isinstance(articles, dict): articles = list(articles.values())
-    		# 	for artcl in articles:
-    		# 		artcl_paragraphs = self.get_paragraphs(artcl)
-    		# 		set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
-    		# else:
-    		# 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
-    		# 	set_units_and_respas_following_respas_decl_dict(paragraphs)
+    		 # if articles:
+    		 # 	if isinstance(articles, dict): articles = list(articles.values())
+    		 # 	for artcl in articles:
+    		 # 		artcl_paragraphs = self.get_paragraphs(artcl)
+    		 # 		set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
+    		 # else:
+    		 # 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    		 # 	set_units_and_respas_following_respas_decl_dict(paragraphs)
     		
-    		if articles_as_paragraphs:
-    			for artcl in articles_as_paragraphs.values():
-    				artcl_paragraphs = []
-    				for k, v in artcl.items():
-    					artcl_paragraphs.append(v)
-    				set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
+    		# if articles_as_paragraphs:
+    		# 	for artcl in articles_as_paragraphs.values():
+    		# 		artcl_paragraphs = []
+    		# 		for k, v in artcl.items():
+    		# 			artcl_paragraphs.append(v)
+    		# 		set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
     				
+    		# else:
+    		# 	paragraphs = self.get_paragraphs(self.txt)
+    		# 	set_units_and_respas_following_respas_decl_dict(paragraphs)
+            
+    		if articles:
+    			if isinstance(articles, dict): articles = list(articles.values())
+    			for artcl in articles:
+    				artcl_paragraphs = self.fekParser.split_all(artcl)
+    				set_units_and_respas_following_respas_decl_dict(artcl_paragraphs)
     		else:
-    			paragraphs = self.get_paragraphs(self.txt)
+    			paragraphs = self.fekParser.split_all(self.text)
     			set_units_and_respas_following_respas_decl_dict(paragraphs)
     		
     		return units_and_respas_following_respas_decl
@@ -324,8 +328,8 @@ class RespaExtractor(object):
     		paragraph_clf = paragraphClf()
     		respas_threshold = 60
     		units_followed_by_respas = OrderedDict()
-    		articles_as_paragraphs = self.fekParser.articles_as_paragraphs
-            #articles = self.get_articles(paorg_pres_decree_txt)
+    		#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
+    		articles = self.fekParser.articles
     		
     		def set_units_followed_by_respas_dict(paragraphs, respas_threshold):
     			appends_since_last_unit_detection = 0
@@ -376,24 +380,33 @@ class RespaExtractor(object):
     		# 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
     		# 	set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
     		
-    		if articles_as_paragraphs:
-    			for artcl in articles_as_paragraphs.values():
-    				artcl_paragraphs = []
-    				for k, v in artcl.items():
-    					artcl_paragraphs.append(v)
-    				set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
+    		# if articles_as_paragraphs:
+    		# 	for artcl in articles_as_paragraphs.values():
+    		# 		artcl_paragraphs = []
+    		# 		for k, v in artcl.items():
+    		# 			artcl_paragraphs.append(v)
+    		# 		set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
     				
+    		# else:
+    		# 	paragraphs = self.get_paragraphs(self.txt)
+    		# 	set_units_followed_by_respas_dict(paragraphs, respas_threshold)
+    		if articles:
+    			if isinstance(articles, dict): articles = list(articles.values())
+    			for artcl in articles:
+    				artcl_paragraphs = self.fekParser.split_all(artcl)
+    				set_units_followed_by_respas_dict(artcl_paragraphs, respas_threshold)
     		else:
-    			paragraphs = self.get_paragraphs(self.txt)
+    			paragraphs = self.fekParser.split_all(self.text)
     			set_units_followed_by_respas_dict(paragraphs, respas_threshold)
-    
+
+            
     		return units_followed_by_respas
     
     
     def get_units_and_respas(self):
     	""" 
     		Return dictionary of rough Organization Unit - RespA associations
-    		mentioned in single paragraphs.
+    		mentioned in SINGLE PARAGRAPHS.
     		
     		@param paorg_pres_decree_txt: GG Presidential Decree Organization Issue
     									  e.g. "ΠΡΟΕΔΡΙΚΟ ΔΙΑΤΑΓΜΑ ΥΠ’ ΑΡΙΘΜ. 18 
@@ -425,8 +438,9 @@ class RespaExtractor(object):
 
     	"""
     	paragraph_clf = paragraphClf()
-    	articles_as_paragraphs = self.fekParser.articles_as_paragraphs
+    	#articles_as_paragraphs = self.fekParser.articles_as_paragraphs
         #articles = self.get_articles(paorg_pres_decree_txt)
+    	articles = self.fekParser.articles
     	additional_respas_threshold = 6
     	units_and_respas = OrderedDict()
     	units_and_respa_sections = []
@@ -474,17 +488,28 @@ class RespaExtractor(object):
     	# 	paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
     	# 	units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
     	
-    	if articles_as_paragraphs:
-    		for artcl in articles_as_paragraphs.values():
-    			artcl_paragraphs = []
-    			for k, v in artcl.items():
-    				artcl_paragraphs.append(v)
+    	# if articles_as_paragraphs:
+    	# 	for artcl in articles_as_paragraphs.values():
+    	# 		artcl_paragraphs = []
+    	# 		for k, v in artcl.items():
+    	# 			artcl_paragraphs.append(v)
+    	# 		units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
+    	# 	units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
+    	# else:
+    	# 	paragraphs = self.get_paragraphs(self.txt)
+    	# 	units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
+    	
+    	if articles:
+    		if isinstance(articles, dict): articles = list(articles.values())
+    		for artcl in articles:
+    			artcl_paragraphs = self.fekParser.split_all(artcl)
     			units_and_respa_sections.append(get_unit_and_respa_paragraphs(artcl_paragraphs, additional_respas_threshold))
     		units_and_respa_sections = [item for sublist in units_and_respa_sections for item in sublist]
     	else:
-    		paragraphs = self.get_paragraphs(self.txt)
+    		#paragraphs = self.get_paragraphs(paorg_pres_decree_txt)
+    		paragraphs = self.fekParser.split_all(self.text)
     		units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
-
+    	
     	unit_and_respa_sections = [x for x in units_and_respa_sections if x]
     	disentangle_units_from_respas(units_and_respa_sections)
     	print('disentangled_units: ', unit_and_respa_sections)
