@@ -27,9 +27,17 @@ class PreParser:
                     ind = i
                     break
 
-            w = texts[i:]+texts[:i]
+            w = texts[ind:]+texts[:ind]
         
         return w
+
+    
+    def remove_headers(self, pages):
+        pages = [[text for text in page if not re.search(r"ΕΦΗΜΕΡΙ(Σ|ΔΑ)\s+ΤΗΣ\s+ΚΥΒΕΡΝΗΣΕΩΣ", text)
+            ] for page in pages
+        ]
+
+        return pages
     
     
     def parenthesis_line_merging(self, doc):
@@ -113,14 +121,19 @@ class PreParser:
         # Fix problematic Δ representation. Even thought it seems the same, when converted to unicode has different value 
         pages = [[re.sub(r"∆", r"Δ", item) for item in page] for page in pages]
 
+        # Fix typos with English letters and convert to greek
+        pages = [[re.sub(dc.ab_greek_latin_pat, lambda m: dc.alphabet_latin_to_greek.get(m.group(0)), item)
+                for item in page] for page in pages]
+
         # Reorder first page
         pages[0] = self.reorder_first_page(pages[0])
-        # pages = [self.reorder_first_page(page) for page in pages]
+        page_zero = pages[0].copy()
+        pages = self.remove_headers(pages[1:])
+        pages = [page_zero] + pages
 
         doc = "".join(block for page in pages for block in page)
 
         doc = self.fix_article_errors(doc)
-
 
         doc = doc.replace("-\n", "")
         doc = doc.replace("−\n", "")
