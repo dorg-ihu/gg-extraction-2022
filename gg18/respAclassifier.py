@@ -1,17 +1,5 @@
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-#from pandas import read_csv
-#from sklearn.model_selection import train_test_split
-#from sklearn import svm
-#from sklearn.model_selection import KFold
-#from sklearn.model_selection import cross_val_score
-#from sklearn.tree import DecisionTreeClassifier
-#from numpy import mean
 from math import sqrt
 from gg18.ggHelper import Helper
-#from util.helper import Helper
-#import main.analyzer
 from collections import OrderedDict, defaultdict
 
 
@@ -27,8 +15,6 @@ class paragraphClf(object):
 		self.training_data = OrderedDict()
 		self.load_train_data('non_respa')
 		self.load_train_data('respa')
-		print(self.load_train_data('respa'))
-		print(self.load_train_data('non_respa'))
 		self.unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ ", 
 							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕIA ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "MONAΔ", "ΠΕΡΙΦΕΡΕΙ"]
 		self.responsibility_keyword_trios = [("ΑΡΜΟΔ", "ΓΙΑ", ":"), ("ΩΣ", "ΣΚΟΠΟ", ":"), ("ΑΡΜΟΔΙΟΤ", "ΕΧΕΙ", ":"), ("ΑΡΜΟΔΙΟΤ", "ΕΞΗΣ", ":"), ("ΑΡΜΟΔΙΟΤ", "ΠΟΥ", ":"),

@@ -420,7 +420,6 @@ class RespExtractor(object):
     		return unit_and_respa_sections
 
     	def disentangle_units_from_respas(units_and_respa_sections):
-    		print("units_and_respa_sections: ", unit_and_respa_sections)
     		for unit_and_respa_section in units_and_respa_sections:
     			# Unit assumed to be in 20 first words
     			unit = ' '.join(Helper.get_words(Helper.remove_list_points(unit_and_respa_section), n=20))
@@ -444,9 +443,8 @@ class RespExtractor(object):
     		paragraphs = self.fekParser.split_all(self.text)
     		units_and_respa_sections = get_unit_and_respa_paragraphs(paragraphs, additional_respas_threshold)
 
-    	unit_and_respa_sections = [x for x in units_and_respa_sections if x]
     	disentangle_units_from_respas(units_and_respa_sections)
-    	print('disentangled_units: ', unit_and_respa_sections)
+
     	return units_and_respas
     
     
