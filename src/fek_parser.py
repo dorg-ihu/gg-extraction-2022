@@ -219,32 +219,39 @@ class FekParser(IssueParser):
         
         pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
         pars = re.split(pattern, text)
-        pars = [item.lstrip() for item in pars]
+        # pars = [item.lstrip() for item in pars]
+        
+        par_dict = {}
 
-        has_duplicate_num = self.check_duplicate_pars(pars)
+        if len(pars) == 1:
+            par_dict['0'] = text
+            return par_dict
 
-        if not has_duplicate_num:
-            level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
-        else:
-            par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        # has_duplicate_num = self.check_duplicate_pars(pars)
 
+        # if not has_duplicate_num:
+        #     level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
+        # else:
+        #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
 
-            par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
-            par_dict = {}
-            if par_splits[0] in dc.all_combs:
-                par_splits.insert(0, "")
+        # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
-            par_dict['0'] = par_splits[0]
+        par_splits = re.split(par_pattern, text)
+        if par_splits[0] in dc.all_combs:
+            par_splits.insert(0, "")
 
-            # Split paragraphs based on the ids
-            for j in range(len(level_0_inds)-1):
-                par_split = par_splits[2*level_0_inds[j]+1:2*level_0_inds[j+1]+1]
-                par = ""
-                for k in range(0, len(par_split)-1, 2):
-                    par += f"\n{par_split[k]}. {par_split[k+1]}"
+        par_dict['0'] = par_splits[0]
 
-                par = par.strip()
-                par_dict[str(j+1)] = par
+        # Split paragraphs based on the ids
+        for j in range(len(level_0_inds)-1):
+            par_split = par_splits[2*level_0_inds[j]+1:2*level_0_inds[j+1]+1]
+            par = ""
+            for k in range(0, len(par_split)-1, 2):
+                par += f"\n{par_split[k]}. {par_split[k+1]}"
+
+            par = par.strip()
+            par_dict[str(j+1)] = par
             
         return par_dict
     
