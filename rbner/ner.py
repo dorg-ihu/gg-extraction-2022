@@ -1,9 +1,20 @@
 from fuzzywuzzy import fuzz
 from src.fek_parser import PreParser
 from src.respa_extractor import RespExtractor
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 import pandas as pd
 import re
+import string
 from string import digits
+import unicodedata as ud
+
+stop = stopwords.words('greek')
+
+
+def remove_punct_and_digits(x):
+    return x.translate(str.maketrans("", "", string.punctuation)).translate(str.maketrans("", "", digits))
+
 
 # read an issue through PreParser and instantiate the RespExtractor to get access to split articles
 filepath = "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf"
@@ -12,45 +23,83 @@ textpath = re.sub(r".pdf$", ".txt", filepath)
 RSP = RespExtractor(textpath)
 articles = RSP.fekParser.articles
 
+article = articles['Άρθρο 11']
+d = {ord('\N{COMBINING ACUTE ACCENT}'):None}
+
+article = ud.normalize('NFD',article).upper().translate(d)
+article = remove_punct_and_digits(article).replace("\n", "").replace("  ", " ")
+articlelist = word_tokenize(article)
+articlelist = [x for x in articlelist if len(x) > 1]
+final_articlelist = [x for x in articlelist if x.lower() not in stop]
+
+
 # import gazetter list
 path = "rb-ner/gazetter_list.xlsx"
-gazdata = pd.read_excel(path)
-gazlist = gazdata["preferredLabels"].tolist()
+data = pd.read_excel(path)
+filtered_data = data[(data["descriptions"] != 'ΑΛΛΟ') & (data["descriptions"] != 'ΓΡΑΦΕΙΟ')].drop_duplicates()
+gazlist = filtered_data["preferredLabels"].tolist()
+gazlist = [remove_punct_and_digits(x) for x in gazlist]
+gazlist = [x.strip().replace("  ", " ") for x in gazlist]
+final_gazlist = []
+for ele in gazlist:
+    tokens = word_tokenize(ele)
+    inner = []
+    for token in tokens:
+        if token.lower() not in stop:
+            inner.append(token)
+    final_gazlist.append(' '.join(inner))
+    
+gazlist = [x for x in gazlist for y in word_tokenize(x) if y not in stop]
 
-def preprocess(text):
-    text = text.translate(str.maketrans('', '', digits))
-    text = text.replace(".", "")
-    text = text.replace(",", "")
-    text = text.replace("-", "")
-    text = text.upper()
-    return text
+for ele in final_gazlist:
+    length = len(word_tokenize(ele))
+    for i in range(len(final_articlelist)):
+        parts = final_articlelist[i:i+length]
+        article_text = ' '.join(parts)
+        ratio = fuzz.ratio(ele, article_text)
+        if ratio > 80:
+            print(article_text, ' - ', ratio, ' - ', ele)
+            break
+    
+# gazlist = word_tokenize(gazlist)
 
+# # Preprocess the gazetter list
+# pp_gazlist = []
+# for ele in gazlist:
+#     to_append = remove_punct_and_digits(ele).strip().lower()
+#     pp_gazlist.append(to_append)
+# gazlist = [*set(pp_gazlist)]
+
+
+
+
+
+# extra_stopwords = ["ως", "εν", "ν", "–", "κλπ", "’", "•", "ΥΕ", "ΠΕ", "ή", "τη", "της", "σημ", "όπως", 
+#                    "a", "α", "δ", "β", "ε", "καθώς", "γ", "από", "τους", "ζ", "στ", "λς"]
+
+# stop.extend(extra_stopwords)
+# stopwords_dict = Counter(stop)
+
+# clean stopwords, puncutation and numbers
+#clean_dups = [" ".join([word if word not in stopwords_dict for text in dups for word in text])]
 
 # Choose the article of interest through key and preprocess it
-article = articles['Άρθρο 40']
-article = preprocess(article)
-article = article.split(' ')
-article = [x.replace("\n", "").strip() for x in article]
 
-# Preprocess on the same function the 
-pp_gazlist = []
-for ele in gazlist:
-    pp_gazlist.append(preprocess(ele).strip())
-gazlist = [*set(pp_gazlist)]
-
+#TODO remove stopwords
+# article = ...
 
 
 # check the actual score between article and each element on the gazlist
 
-for ele in gazlist:
-    length = len(ele.split(' '))
-    for i in range(len(article)):
-        parts = article[i:i+length]
-        article_text = ' '.join(parts)
-        ratio = fuzz.ratio(ele, article_text)
-        if ratio > 60:
-            print(ele)
-            break
+# for ele in gazlist:
+#     length = len(ele.split(' '))
+#     for i in range(len(article)):
+#         parts = article[i:i+length]
+#         article_text = ' '.join(parts)
+#         ratio = fuzz.ratio(ele, article_text)
+#         if ratio > 60:
+#             print(ele)
+#             break
 
 
 
