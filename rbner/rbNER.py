@@ -15,52 +15,80 @@ class rbNER():
     def __init__(self):
         self.gazpath = "rbner/gazetter_list.xlsx"
         self.data = pd.read_excel(self.gazpath)
-        self.gazlist = self.dataPreprocess()
+        self.gazlist = self.gazlist_preprocess()
         self.stop = stopwords.words('greek')
         self.threshold = 0.95
         self.nlp = Pipeline("pos,ner,dp")
         self.unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ ", 
-							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕIA ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "MONAΔ", "ΠΕΡΙΦΕΡΕΙ"]
+							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕIA ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "MONAΔ", "ΠΕΡΙΦΕΡΕΙ", "ΑΡΧΗ", "ΑΡΧΕΣ", "ΣΩΜΑ", "ΓΕΝΙΚΗ", "ΕΠΙΤΡΟΠΗ"]
 
     
-    def remove_punct_and_digits(self, x):
+    @staticmethod
+    def remove_punct_and_digits(x):
+        """ removes punctuation and digits from the given text """
         return x.translate(str.maketrans("", "", string.punctuation)).translate(str.maketrans("", "", digits))
     
     
     @staticmethod
+    def remove_list_points(txt):
+        """ removes list points from the given text if they exist in the beginning of the line """
+        txt = re.sub(r"^[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", txt)
+        return re.sub(r"\n[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", txt)
+    
+    
+    @staticmethod
+    #TODO check if this is already taken into account on PreParser
     def clean_up_txt(txt):
         txt = re.sub('[\t ]+', ' ', txt)
         txt = re.sub('\-[\s]+', '', txt)
         txt = re.sub('\−[\s]+', '', txt)
         return txt.replace("\f", '')
-    
-    
-    def dataPreprocess(self):
-        filtered_data = self.data[(self.data["descriptions"] != 'ΑΛΛΟ') & (self.data["descriptions"] != 'ΓΡΑΦΕΙΟ')].drop_duplicates()
-        gazlist = filtered_data["preferredLabels"].tolist()
-        return [self.remove_punct_and_digits(x).strip().replace("  ", " ") for x in gazlist]
 
     
-    def acronyms(self, txt, replace=False):
+    @staticmethod
+    def acronyms(txt, replace=False):
+        """ finds the acronyms (even if they are presented with more than one character).
+            If replace is set to True then the method returns the given text having the acronyms removed
+            else returns a dictionary with matches
+        """
         #pattern = r'(?:(?<=\.|\s)[Α-Ω]\.)+'
         pattern = r'\b(?:[α-ωά-ώΑ-ΩΆ-Ώ]+\.){2,}'
         if not replace:
             return set(re.findall(pattern, txt))
         else:
             return re.sub(pattern, "", txt)
-        
-    def regex_entities(self, txt):
+    
+    
+    @staticmethod
+    def regex_entities(txt):
+        """ finds the occurences of the following pattern into the text
+            Consecutive words starting with capital letter that may also contain in-between "and" or ","
+        """
         pattern = r'([Α-ΩΆ-Ώ][\w-]+[,\s(και)]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-Ω][\w-]+)'
         return [x.group() for x in re.finditer(pattern, txt)]
 
     
-    def remove_accents(self, txt):
+    @staticmethod
+    def remove_intonations(txt):
+        """ removes intonation off the text and turns all letters into capitals """
         d = {ord('\N{COMBINING ACUTE ACCENT}'):None}
         return ud.normalize('NFD',txt).upper().translate(d)
         
     
+    def gazlist_preprocess(self):
+        """ upon call removes units from the gazeteer list that seem irrelevant or exist as duplicates 
+            and cleans the remaining unit names (remove punctuation and digits)
+        """
+        filtered_data = self.data[(self.data["descriptions"] != 'ΑΛΛΟ') & (self.data["descriptions"] != 'ΓΡΑΦΕΙΟ')].drop_duplicates()
+        gazlist = filtered_data["preferredLabels"].tolist()
+        return [self.remove_punct_and_digits(x).strip().replace("  ", " ") for x in gazlist]
+    
+    
     def gazetter_entities(self, txt):
-        txt = self.remove_accents(txt)
+        """ finds similar substrings from gazetter list inside the given text after calling -cleaning methods-
+            if none of the existing units is similar enough ( higher than threshold ) the 3 most similar are returned instead
+        """
+        txt = self.remove_intonations(txt)
         txt = self.remove_punct_and_digits(txt).replace("\n", "").replace("  ", " ")
         
         ents, scored_elems, topN = [], [], 3
@@ -77,8 +105,11 @@ class rbNER():
 
     
     def sentences_with_keywords(self, txt):
+        """ cleans the given text and afterwards splits into sentences. Finally iterates through the sentences and returns those that
+            contain any of the unit identifications as they were introduced during the constructor.
+        """
         #TODO write a method that performs basic txt cleaning
-        txt = self.remove_accents(txt)
+        txt = self.remove_intonations(txt)
         txt = self.acronyms(txt, replace=True)
         txt = self.clean_up_txt(txt)
         sentences = sent_tokenize(txt, language="Greek")

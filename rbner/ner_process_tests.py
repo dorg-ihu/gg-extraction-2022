@@ -160,15 +160,20 @@ unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤ
 
 
 results = rbner.sentences_with_keywords(a1)
+print(results)
+print(rbner.remove_list_points(a1))
 
-for ele in unit_keywords:
     
 
 
 
 
 
-
+def clean_up_for_paorgs_getter(txt):
+    return txt.replace('−\n', '').replace('-\n', '')\
+                  .replace('−', '').replace('-', '').replace('\n', ' ')\
+                  .replace(' και ', ' ').replace(' της ', ' ').replace(' του ', ' ').replace(' των ', ' ')\
+                  .replace('  ', ' ').replace('   ', ' ')
 
 
 
