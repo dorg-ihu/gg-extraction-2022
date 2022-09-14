@@ -47,12 +47,13 @@ class rbNER():
     
     @staticmethod
     def acronyms(txt, replace=False):
+        #TODO try to match the case where last character doesn't end with a dot (.) eg "Ε.Σ.Υ" instead of "Ε.Σ.Υ."
         """ finds the acronyms (even if they are presented with more than one character).
             If replace is set to True then the method returns the given text having the acronyms removed
             else returns a dictionary with matches
         """
         #pattern = r'(?:(?<=\.|\s)[Α-Ω]\.)+'
-        pattern = r'\b(?:[α-ωά-ώΑ-ΩΆ-Ώ]+\.){2,}'
+        pattern = r'\b(?:[α-ωά-ώΑ-ΩΆ-Ώ]*\.[Α-Ωα-ω]*){2,}'
         if not replace:
             return set(re.findall(pattern, txt))
         else:
@@ -60,13 +61,23 @@ class rbNER():
     
     
     @staticmethod
+    def remove_articles(txt):
+        #txt_words = txt.split(" ")
+        tobeRemoved = ["O", "H", "Το", "Οι", "Ένας", "Μία", "Ένα"]
+        resultwords = [word for word in re.split("\W+", txt) if word not in tobeRemoved]
+        return ' '.join(resultwords)
+        
+    
+    @staticmethod
     def regex_entities(txt):
         """ finds the occurences of the following pattern into the text
-            Consecutive words starting with capital letter that may also contain in-between "and" or ","
+            Consecutive words starting with capital letter that may also contain in-between "και-του-της-των" or ","
         """
-        pattern = r'([Α-ΩΆ-Ώ][\w-]+[,\s(και)]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-Ω][\w-]+)'
-        return [x.group() for x in re.finditer(pattern, txt)]
-
+        subpattern = "(και)(του)(της)(των)"
+        pattern = rf"([Α-ΩΆ-Ώ][\w-]+[,\s{subpattern}]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-Ω][\w-]+)"
+        results = [x.group() for x in re.finditer(pattern, txt)]
+        return [rbNER.remove_articles(x) for x in results]
+        
     
     @staticmethod
     def remove_intonations(txt):
@@ -89,7 +100,7 @@ class rbNER():
             if none of the existing units is similar enough ( higher than threshold ) the 3 most similar are returned instead
         """
         txt = self.remove_intonations(txt)
-        txt = self.remove_punct_and_digits(txt).replace("\n", "").replace("  ", " ")
+        txt = self.remove_punct_and_digits(txt).replace("\n", " ").replace("  ", " ")
         
         ents, scored_elems, topN = [], [], 3
         for ele in self.gazlist:
@@ -113,7 +124,6 @@ class rbNER():
         txt = self.acronyms(txt, replace=True)
         txt = self.clean_up_txt(txt)
         sentences = sent_tokenize(txt, language="Greek")
-        print(sentences)
         sentence_cands = []
         for unit in self.unit_keywords:
             for sentence in sentences:
