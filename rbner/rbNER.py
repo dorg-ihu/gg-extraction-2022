@@ -95,7 +95,7 @@ class rbNER():
         return [self.remove_punct_and_digits(x).strip().replace("  ", " ") for x in gazlist]
     
     
-    def gazetter_entities(self, txt):
+    def gazetter_entities(self, txt, returnSimilar=True):
         """ finds similar substrings from gazetter list inside the given text after calling -cleaning methods-
             if none of the existing units is similar enough ( higher than threshold ) the 3 most similar are returned instead
         """
@@ -108,7 +108,7 @@ class rbNER():
             scored_elems.append((ele, similarity))
             if similarity > self.threshold:
                 ents.append((ele, similarity))
-        if not ents:
+        if not ents and returnSimilar:
             print("Couldn't find entities with similarity higher than the threshold, instead the top {} results are being returned".format(topN))
             return Counter(dict(scored_elems)).most_common(topN)
         else:
