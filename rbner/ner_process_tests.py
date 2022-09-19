@@ -13,6 +13,20 @@ gazlist = ["Χημικό", "Επιστημών Υγιεινή Περιβάλλο
 
 
 rbner = rbNER()
+
+reEntities = rbner.regex_entities(article17)
+print(reEntities)
+
+for ent in reEntities:
+    print(ent, ' - ', rbner.gazetter_entities(ent))
+    print("##"*5)
+  
+
+for ent in reEntities:
+    print(ent, ' - ', rbner.gazetter_entities_R(ent, False))
+    print("##"*5)
+
+    
 candidates = rbner.gazetter_entities(a1)
 acro = rbner.acronyms(a1)
 print(acro)
