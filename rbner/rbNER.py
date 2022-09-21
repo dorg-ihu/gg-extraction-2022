@@ -22,43 +22,13 @@ class rbNER():
         self.nlp = Pipeline("pos,ner,dp")
         self.unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ ", 
 							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕIA ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "ΜΟΝΑΔ", "ΠΕΡΙΦΕΡΕΙ", "ΑΡΧΗ", "ΑΡΧΕΣ", "ΣΩΜΑ", "ΓΕΝΙΚΗ", "ΕΠΙΤΡΟΠΗ"]
-
-    
-    # def hybridNER(self, txt):
-    #     #combine all the methods within the class: 
-    #     # Steps:
-    #     # 1. get possible entities from regex
-    #     # 2. keep those that contain keyword
-    #     # 3. try to match with the gazetteer list and if do so, return them (not the equivalent from the list)
-    #     initial_entities = rbNER.regex_entities(txt)
-    #     initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
-    #     print("Initially, {} candidate entities".format(len(initial_entities)))
-    #     print(initial_entities, "\n")
-    #     interim_entities = []
-    #     for ent in initial_entities:
-    #         for keyword in self.unit_keywords:
-    #             if keyword in ent:
-    #                 interim_entities.append(ent)
-    #                 break
-    #     print("After keywords validation step, {} remained".format(len(interim_entities)))
-    #     print(interim_entities, "\n")
-    #     final_entities = []
-    #     for ient in interim_entities:
-    #         result = process.extractOne(ient, self.gazlist)
-    #         print(ient, result)
-    #         if (result[1]/100) > self.threshold:
-    #             final_entities.append(ient)
-    #     print("Finally {} entities are returned".format(len(final_entities)))
-    #     print(final_entities, "\n")
-    #     return final_entities
-            
+        
     
     def hybridNER(self, txt):
-        #combine all the methods within the class: 
-        # Steps:
-        # 1. get possible entities from regex
-        # 2. keep those that contain keyword
-        # 3. try to match with the gazetteer list and if do so, return them (not the equivalent from the list)
+        """ combines the main methods within the rbNER class on 3 steps: 
+            1. get possible entities from regex that finds words with first letter capitalized,
+            2. keep those that contain any of the keywords defined on constructor,
+            3. try to match the remaining with the gazetteer list """
         initial_entities = rbNER.regex_entities(txt)
         initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
         print("Initially, {} candidate entities".format(len(initial_entities)))
@@ -82,6 +52,35 @@ class rbNER():
         print(final_entities, "\n")
         return final_entities 
     
+    
+    def hybridNER_index(self, txt):
+        """ combines the main methods within the rbNER class on 3 steps: 
+            1. get possible entities from regex that finds words with first letter capitalized,
+            2. keep those that contain any of the keywords defined on constructor,
+            3. try to match the remaining with the gazetteer list 
+            * different from hybridNER on also returning the index margins for each match"""
+        initial_entities = rbNER.regex_entities_index(txt)
+        initial_entities = [(rbNER.remove_intonations(x[0]), x[1], x[2]) for x in initial_entities]
+        print("Initially, {} candidate entities".format(len(initial_entities)))
+        print(initial_entities, "\n")
+        interim_entities = []
+        for ent, start, end in initial_entities:
+            for keyword in self.unit_keywords:
+                if keyword in ent:
+                    interim_entities.append((ent, start, end))
+                    break
+        print("After keywords validation step, {} remained".format(len(interim_entities)))
+        print(interim_entities, "\n")
+        final_entities = []
+        for ient, start, end in interim_entities:
+            for gaz in self.gazlist:
+                score = fuzz.ratio(gaz, ient)/100
+                if score >= self.threshold:
+                    final_entities.append((ient, start, end))
+                    break
+        print("Finally {} entities are returned".format(len(final_entities)))
+        print(final_entities, "\n")
+        return final_entities 
     
     
     @staticmethod
@@ -108,7 +107,6 @@ class rbNER():
     
     @staticmethod
     def acronyms(txt, replace=False):
-        #TODO try to match the case where last character doesn't end with a dot (.) eg "Ε.Σ.Υ" instead of "Ε.Σ.Υ."
         """ finds the acronyms (even if they are presented with more than one character).
             If replace is set to True then the method returns the given text having the acronyms removed
             else returns a dictionary with matches
@@ -127,13 +125,15 @@ class rbNER():
         pattern = r"([Α-ΩΆ-Ώ][\w-]+[,\s(και)(του)(της)]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-ΩΆ-Ώ][\w-]+)\s\(+\b(?:[α-ωά-ώΑ-ΩΆ-Ώ]*\.[Α-Ωα-ω]*){2,}\)+"
         return set(re.findall(pattern, txt))
     
+    
     @staticmethod
     def remove_articles(txt):
-        #txt_words = txt.split(" ")
+        """ 
+        """
         tobeRemoved = ["O", "H", "Το", "Τον", "Τη", "Την", "Οι", "Ένας", "Μία", "Ένα"]
         resultwords = [word for word in re.split("\W+", txt) if word not in tobeRemoved]
         return ' '.join(resultwords)
-        
+    
     
     @staticmethod
     def regex_entities(txt):
@@ -144,7 +144,19 @@ class rbNER():
         pattern = rf"([Α-ΩΆ-Ώ][\w-]+[,\s{subpattern}]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-ΩΆ-Ώ][\w-]+)"
         results = [x.group() for x in re.finditer(pattern, txt)]
         return [rbNER.remove_articles(x) for x in results]
+     
         
+    @staticmethod
+    def regex_entities_index(txt):
+        """ finds the occurences of the following pattern into the text
+            Consecutive words starting with capital letter that may also contain in-between "και-του-της-των" or ","
+        """
+        subpattern = "(και)(του)(της)(των)"
+        pattern = rf"([Α-ΩΆ-Ώ][\w-]+[,\s{subpattern}]*)+((?=\s[Α-ΩΆ-Ώ]))(?!\s[\W])(?:\s[Α-ΩΆ-Ώ][\w-]+)"
+        #results = [x.group() for x in re.finditer(pattern, txt)]
+        
+        results = [(x.group(), x.start(0), x.end(0)) for x in re.finditer(pattern, txt, flags=0)]
+        return [(rbNER.remove_articles(x[0]), x[1], x[2]) for x in results]
     
     @staticmethod
     def remove_intonations(txt):
@@ -233,36 +245,6 @@ class rbNER():
     def grnlptoolkit(self, text):
         doc = self.nlp(text)
         return doc
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
