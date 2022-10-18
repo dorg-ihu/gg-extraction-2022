@@ -8,7 +8,7 @@ from string import digits
 import unicodedata as ud
 import pandas as pd
 from collections import Counter
-from gr_nlp_toolkit import Pipeline
+# from gr_nlp_toolkit import Pipeline
 
 
 class rbNER():
@@ -18,10 +18,10 @@ class rbNER():
         self.data = pd.read_excel(self.gazpath)
         self.gazlist = self.gazlist_preprocess()
         self.stop = stopwords.words('greek')
-        self.threshold = 0.9
-        self.nlp = Pipeline("pos,ner,dp")
-        self.unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ ", 
-							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕIA ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "ΜΟΝΑΔ", "ΠΕΡΙΦΕΡΕΙ", "ΑΡΧΗ", "ΑΡΧΕΣ", "ΣΩΜΑ", "ΓΕΝΙΚΗ", "ΕΠΙΤΡΟΠΗ"]
+        self.threshold = 0.8
+        # self.nlp = Pipeline("pos,ner,dp")
+        self.unit_keywords = ["ΤΜΗΜΑ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ", 
+							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕΙΑ ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "ΜΟΝΑΔ", "ΠΕΡΙΦΕΡΕΙ", "ΑΡΧΗ", "ΑΡΧΕΣ", "ΣΩΜΑ", "ΓΕΝΙΚΗ", "ΕΠΙΤΡΟΠΗ"]
         
     
     def hybridNER(self, txt):
@@ -31,26 +31,27 @@ class rbNER():
             3. try to match the remaining with the gazetteer list """
         initial_entities = rbNER.regex_entities(txt)
         initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
-        print("Initially, {} candidate entities".format(len(initial_entities)))
-        print(initial_entities, "\n")
+        # print("Initially, {} candidate entities".format(len(initial_entities)))
+        # print(initial_entities, "\n")
         interim_entities = []
         for ent in initial_entities:
             for keyword in self.unit_keywords:
                 if keyword in ent:
                     interim_entities.append(ent)
                     break
-        print("After keywords validation step, {} remained".format(len(interim_entities)))
-        print(interim_entities, "\n")
-        final_entities = []
-        for ient in interim_entities:
-            for gaz in self.gazlist:
-                score = fuzz.ratio(gaz, ient)/100
-                if score >= self.threshold:
-                    final_entities.append(ient)
-                    break
-        print("Finally {} entities are returned".format(len(final_entities)))
-        print(final_entities, "\n")
-        return final_entities 
+        # print("After keywords validation step, {} remained".format(len(interim_entities)))
+        # print(interim_entities, "\n")
+        
+        # final_entities = []
+        # for ient in interim_entities:
+        #     for gaz in self.gazlist:
+        #         score = fuzz.ratio(gaz, ient)/100
+        #         if score >= self.threshold:
+        #             final_entities.append(ient)
+        #             break
+        # print("Finally {} entities are returned".format(len(final_entities)))
+        # print(final_entities, "\n")
+        return interim_entities 
     
     
     def hybridNER_index(self, txt):
