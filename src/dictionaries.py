@@ -22,3 +22,8 @@ ab_double_combs = ab_combs + double_combs
 all_combs_pat = "(" + "|".join(all_combs) + ")"
 
 split_all_pattern = rf"[\n ]\(?{all_combs_pat}[).] *"
+
+# added for testing purpose
+all_combs_sublvl = alphabet + ab_combs + double_combs + latin_numbers
+all_combs_pat_sublvl = "(" + "|".join(all_combs_sublvl) + ")"
+split_all_pattern_sublvl = rf"[\n ]\(?{all_combs_pat_sublvl}[).] *"
