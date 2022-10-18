@@ -267,8 +267,17 @@ class FekParser(IssueParser):
         return final_splits
 
 
-
-
-
+    def split_all_int(self, text):
+        
+        splits = re.split(dc.split_all_pattern, text)
+        if splits[0] in dc.all_combs:
+            splits.insert(0, "")
+        
+        final_splits = [(splits[i-1], f"{splits[i-1]}) {splits[i]}") for i in range(2, len(splits), 2)]
+        final_splits.insert(0, splits[0])
+        return final_splits
+        
+            
+        
 
 
