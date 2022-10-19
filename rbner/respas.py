@@ -29,6 +29,16 @@ class respas():
         return first_line + rest_lines
 
     
+    def find_master_unit(self, paragraphs):
+        master_unit = ""
+        for key, value in paragraphs.items():
+            units = self.rbner.hybridNER(value)
+            if units:
+                master_unit = units[0]
+                break
+        return master_unit
+
+
     def get_paragraph_levels(self, items):
         levels = []
         for i, item in enumerate(items):
@@ -81,6 +91,9 @@ class respas():
             
     
     def get_candidate_paragraphs_per_article(self, paragraphs):
+        
+        master_unit = self.find_master_unit(paragraphs)
+        
         respa_paragraphs = []
         for key, value in paragraphs.items():
             if ":" in value:
@@ -89,15 +102,15 @@ class respas():
                 is_irrelevant = self.has_irrelevant_kws(unit_part)
                 if is_respa_related and not is_irrelevant:
                     respa_paragraphs.append(value)
-        return respa_paragraphs
+        return master_unit, respa_paragraphs
     
-    def get_respas(self, paragraphs):
+    
+    def get_respas(self, master_unit, paragraphs):
         responsibilities = OrderedDict()
         for idx, paragraph in enumerate(paragraphs):
             try:
                 new_par = self.remove_first_level(paragraph)
                 grouped_info, depth = self.find_levels_depth(new_par)
-                # print("The following paragraph", idx, "success")
             except Exception as e:
                 print("The following paragraph", idx, "caused error", e)
                 continue
@@ -105,13 +118,13 @@ class respas():
             if depth > 1:
                 for group in grouped_info:
                     cand_units = self.rbner.hybridNER(group[0][3])
-                    unit = cand_units[0] if cand_units else ""
+                    unit = cand_units[0] if cand_units else "##"+master_unit
                     respas = [x[3] for x in group[1:]]
                     responsibilities[unit] = respas
             else:
                 unit_part = paragraph.split(":", 1)[0]
                 cand_units = self.rbner.hybridNER(unit_part)
-                unit = cand_units[0] if cand_units else ""
+                unit = cand_units[0] if cand_units else "##"+master_unit
                 
                 respas = [x[0] for x in grouped_info]
                 respas = [x[3] for x in respas]
