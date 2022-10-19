@@ -405,8 +405,9 @@ for AR_key, AR_value in articles.items():
                 print("Article {} has been skipped due to irrelevant_title".format(AR_key))
                 continue
             else:
-                responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
-                responsibilities = RSP.get_respas(responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
+                master_unit, responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
+                print(master_unit)
+                responsibilities = RSP.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
                 if responsibilities:
                     responsibilities_dict[AR_key] = responsibilities
                     print("We found {} pairs of responsibilities on Article {} has been processed".format(len(responsibilities), AR_key))
