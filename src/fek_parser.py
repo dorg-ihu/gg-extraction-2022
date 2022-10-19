@@ -156,7 +156,14 @@ class FekParser(IssueParser):
     def __init__(self, filename, stdin=False, toTxt=False):
         super().__init__(filename, stdin, toTxt)
     
-
+    
+    def replace_abbreviations(self, text):
+        replacements = dc.abbr_replacements
+        for k, v in replacements:
+            text = text.replace(k, v)
+        return text
+            
+    
     def check_duplicate_pars(self, pars):
         '''
         Check if there are duplicates in paragraphs due to cases with same numbering as paragraphs
@@ -217,8 +224,14 @@ class FekParser(IssueParser):
         Split article into paragraphs and return them as a dict
         '''
         
+        # before anything try to replace common mistakes for the following abbreviations
+        text = self.replace_abbreviations(text)
+        
         pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
         pars = re.split(pattern, text)
+        # print(len(pars))
+        # for par in pars:
+        #     print(f"pars are {par}")
         # pars = [item.lstrip() for item in pars]
         
         par_dict = {}
@@ -238,6 +251,9 @@ class FekParser(IssueParser):
         # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
         par_splits = re.split(par_pattern, text)
+        # for par in par_splits:
+        #     print(f"par is {par}")
+        #print(par_splits)
         if par_splits[0] in dc.all_combs:
             par_splits.insert(0, "")
 
