@@ -12,7 +12,7 @@ class respas():
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         
-        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ"]
+        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα"]
         
         self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό"]
         
@@ -118,9 +118,16 @@ class respas():
             if depth > 1:
                 for group in grouped_info:
                     cand_units = self.rbner.hybridNER(group[0][3])
-                    unit = cand_units[0] if cand_units else "##"+master_unit
-                    respas = [x[3] for x in group[1:]]
-                    responsibilities[unit] = respas
+                    if not cand_units:
+                        unit = "##"+master_unit
+                        respas = [x[3] for x in group]
+                    else:
+                        unit = cand_units[0]
+                        respas = [x[3] for x in group[1:]]
+                    if unit in responsibilities:
+                        responsibilities[unit].extend(respas)
+                    else:
+                        responsibilities[unit] = respas
             else:
                 unit_part = paragraph.split(":", 1)[0]
                 cand_units = self.rbner.hybridNER(unit_part)
@@ -128,10 +135,17 @@ class respas():
                 
                 respas = [x[0] for x in grouped_info]
                 respas = [x[3] for x in respas]
-                responsibilities[unit] = respas
+                
+                if unit in responsibilities:
+                    responsibilities[unit].extend(respas)
+                else:
+                    responsibilities[unit] = respas
         return responsibilities
                     
-                    
+     
+    #TODO consider cleaning the problematic pairs that get_respas method produces
+    def postprocess_cleaning_of_problematic_pairs(self):
+        return
                     
                     
                     
