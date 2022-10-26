@@ -338,6 +338,7 @@ filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
 filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
 
 """initialize PreParser that produces a .txt file on directory"""
 text = PreParser().pdf2text(filepath)
@@ -357,18 +358,17 @@ articles = FPRS.articles
 relations_list = []
 for AR_key, AR_value in articles.items():
     try:
-        article_levels = FPRS.find_article_paragraphs(AR_value)
-        if len(article_levels) > 1:
-            possible_title = article_levels["0"]
+        article_paragraphs = FPRS.find_article_paragraphs(AR_value)
+        if len(article_paragraphs) > 1:
+            possible_title = article_paragraphs["0"]
             if any(title_kw in possible_title for title_kw in STR.irrelevant_title):
                 print("Article {} has been skipped due to irrelevant_title".format(AR_key))
                 continue
-            else:        
-                relation_paragraphs = STR.get_paragraphs(article_levels) # returns which paragraphs meet the STRUCTURE requirements
-                relations = STR.get_relations(relation_paragraphs)
-                relations_list.append(relations)
-                print("Article {} has been processed".format(AR_key))
         
+        master_unit, relation_paragraphs = STR.get_candidate_paragraphs_per_article(article_paragraphs) # returns which paragraphs meet the STRUCTURE requirements
+        relations = STR.get_relations(master_unit, relation_paragraphs)
+        relations_list.append(relations)
+        print("Article {} has been processed".format(AR_key))
     except Exception as e:
         print("Article {} resulted in error".format(AR_key))
         pass
@@ -405,16 +405,14 @@ for AR_key, AR_value in articles.items():
             if any(title_kw in possible_title for title_kw in RSP.irrelevant_title):
                 print("Article {} has been skipped due to irrelevant_title".format(AR_key))
                 continue
-            else:
-                master_unit, responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
-                print(master_unit)
-                responsibilities = RSP.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
-                if responsibilities:
-                    responsibilities_dict[AR_key] = responsibilities
-                    print("We found {} pairs of responsibilities on Article {} has been processed".format(len(responsibilities), AR_key))
-        else:
-            #TODO write rules for 1-paragraph-articles
-            continue
+
+        master_unit, responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
+
+        responsibilities = RSP.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
+        if responsibilities:
+            responsibilities_dict[AR_key] = responsibilities
+            print("We found {} pairs of responsibilities on Article {} has been processed".format(len(responsibilities), AR_key))
+        
     except Exception as e:
         print("Article {} resulted in error".format(AR_key))
         pass
