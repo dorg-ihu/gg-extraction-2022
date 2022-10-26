@@ -12,7 +12,7 @@ class respas():
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         
-        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα"]
+        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα", "αρμόδια", "ΑΡΜΟΔΙΑ"]
         
         self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό"]
         
@@ -119,6 +119,7 @@ class respas():
                 for group in grouped_info:
                     cand_units = self.rbner.hybridNER(group[0][3])
                     if not cand_units:
+                        #TODO also check on the part until ":" before assigning master unit
                         unit = "##"+master_unit
                         respas = [x[3] for x in group]
                     else:
