@@ -56,7 +56,14 @@ class structure():
     #             dynamic_list.append((attr, i))
     #             get_items_level(child, i+1)
     # get_items_level(q)
-    
+    def find_master_unit(self, paragraphs):
+        master_unit = ""
+        for key, value in paragraphs.items():
+            units = self.rbner.hybridNER(value)
+            if units:
+                master_unit = units[0]
+                break
+        return master_unit
     
     def remove_list_points(self, txt):
         txt = re.sub(r"^[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", txt)
@@ -98,35 +105,41 @@ class structure():
         return candidates
                 
     
-    def get_paragraphs(self, levels):
-        candidates = []        
-        for key, value in levels.items():
+    def get_candidate_paragraphs_per_article(self, paragraphs):
+        
+        master_unit = self.find_master_unit(paragraphs)
+        
+        relation_paragraphs = []        
+        for key, value in paragraphs.items():
             if ":" in value:
-                unit_part = value.split(":")[0]
+                unit_part = value.split(":", 1)[0]
                 is_structure_related = self.has_structure_kws(unit_part)
                 is_irrelevant = self.has_irrelevant_kws(unit_part)
                 if is_structure_related and not is_irrelevant:
-                    candidates.append(value)
-        return candidates
-        
-    
-    def get_relations(self, paragraphs):
-        relations = []
-        for paragraph in paragraphs:
-            if paragraph:
-                parts = paragraph.split(":")
-                if len(parts) == 2:
-                    unit_part, rel_part = parts[0], parts[1]
-                    unit = self.rbner.hybridNER(unit_part)[0]
-                    if unit:
-                        sublevels = self.FekP.split_all(rel_part)[1:]
-                        if sublevels:
-                            for lvl in sublevels:
-                                has_unit = self.has_unit_kws(lvl)
-                                if has_unit:
-                                    relations.append((unit, self.remove_list_points(lvl)))
-        return relations
+                    relation_paragraphs.append(value)
+        return master_unit, relation_paragraphs
                     
+    
+    def get_relations(self, master_unit, paragraphs):
+        relations = []
+        for idx, paragraph in enumerate(paragraphs):
+            parts = paragraph.split(":", 1)
+
+            unit_part, rel_part = parts[0], parts[1]
+            try:
+                unit = self.rbner.hybridNER(unit_part)[0]
+            except:
+                unit = master_unit
+            
+            sublevels = self.FekP.split_all(rel_part)
+            if sublevels:
+                for lvl in sublevels:
+                    has_unit = self.has_unit_kws(lvl)
+                    if has_unit:
+                        relations.append((unit, self.remove_list_points(lvl)))
+        return relations
+    
+    
     
     def get_relations_graph(self, relations):
         G = nx.DiGraph()
