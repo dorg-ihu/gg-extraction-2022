@@ -322,25 +322,30 @@ def find_levels_depth(txt):
 import time
 start_time = time.time()
 
-from src.fek_parser import PreParser, FekParser
-from src.respa_extractor import RespExtractor
-from rbner.rbNER import rbNER
-import re
-import random
-from rbner.structure import structure
+#from src.respa_extractor import RespExtractor
+#from rbner.rbNER import rbNER
+#import random
+
 from rbner.respas import respas
+from src.fek_parser import PreParser, FekParser
+from rbner.structure import structure
+import re
 from collections import OrderedDict
 
+
+
+
 """give a filepath (in .pdf form)"""
+filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
 
 # filepath = "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
+
 #filepath = "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
+#filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
+#filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
 
-"""initialize PreParser that produces a .txt file on directory"""
+"""initialize PreParser that produces a .txt file on working directory"""
 text = PreParser().pdf2text(filepath)
 
 """change the filename extenstion to .txt"""
@@ -352,7 +357,6 @@ rbner = rbNER()
 
 """get articles on the given text"""
 articles = FPRS.articles
-
 
 #%% relations extraction
 relations_list = []
