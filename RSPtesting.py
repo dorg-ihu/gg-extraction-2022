@@ -1,11 +1,5 @@
 import pandas as pd
-# from src.fek_parser import PreParser, FekParser
-# from src.respa_extractor import RespExtractor
 from rbner.rbNER import rbNER
-#import re
-#import random
-#from rbner.structure import structure
-# from rbner.respas import respas
 from collections import OrderedDict
 
 path = "testing/RSP_testdata.xlsx"
@@ -37,26 +31,15 @@ def main(text, textpath, ar_key):
         if any(title_kw in possible_title for title_kw in RSP.irrelevant_title):
             print("Article {} has been skipped due to irrelevant_title".format(ar_key))
             return result
-        else:
-            master_unit, responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
-            responsibilities = RSP.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
-            if responsibilities:
-                print("We found {} pairs of responsibilities on Article {} has been processed".format(len(responsibilities), ar_key))
-                return responsibilities
-    else:
-        pass
-    return result
-    
-# def analyze_dict_numbers(resultsdict):
-#     NoRespas = 0
-#     for k, v in resultsdict.items():
-#         print(type(v))
-#         print(len(v))
-#         NoRespas += len(v)
-#     return NoRespas
- 
 
-# combined_dummy = [()]
+    master_unit, responsibility_paragraphs = RSP.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
+    responsibilities = RSP.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
+    if responsibilities:
+        print("We found {} pairs of responsibilities on Article {} of {}".format(len(responsibilities), ar_key, textpath.split("yp-")[1]))
+        result = responsibilities
+    return result
+
+
 combined["results"] = [main(row["Text"], row["Path"], row["Article"]) for idx, row in combined.iterrows()]
 combined.drop("Text", inplace=True, axis=1)
 combined.drop("Path", inplace=True, axis=1)
