@@ -27,6 +27,23 @@ class rbNER():
     def hybridNER(self, txt):
         """ combines the main methods within the rbNER class on 3 steps: 
             1. get possible entities from regex that finds words with first letter capitalized,
+            2. keep those that contain any of the keywords defined on constructor """
+        initial_entities = rbNER.regex_entities(txt)
+        initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
+        # print("Initially, {} candidate entities".format(len(initial_entities)))
+        # print(initial_entities, "\n")
+        entities = []
+        for ent in initial_entities:
+            for keyword in self.unit_keywords:
+                if keyword in ent:
+                    entities.append(ent)
+                    break
+        return entities 
+    
+    
+    def hybridNER_gazlist(self, txt):
+        """ combines the main methods within the rbNER class on 3 steps: 
+            1. get possible entities from regex that finds words with first letter capitalized,
             2. keep those that contain any of the keywords defined on constructor,
             3. try to match the remaining with the gazetteer list """
         initial_entities = rbNER.regex_entities(txt)
@@ -42,13 +59,13 @@ class rbNER():
         # print("After keywords validation step, {} remained".format(len(interim_entities)))
         # print(interim_entities, "\n")
         
-        # final_entities = []
-        # for ient in interim_entities:
-        #     for gaz in self.gazlist:
-        #         score = fuzz.ratio(gaz, ient)/100
-        #         if score >= self.threshold:
-        #             final_entities.append(ient)
-        #             break
+        final_entities = []
+        for ient in interim_entities:
+            for gaz in self.gazlist:
+                score = fuzz.ratio(gaz, ient)/100
+                if score >= self.threshold:
+                    final_entities.append(ient)
+                    break
         # print("Finally {} entities are returned".format(len(final_entities)))
         # print(final_entities, "\n")
         return interim_entities 
