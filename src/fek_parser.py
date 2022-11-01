@@ -1,5 +1,6 @@
 from typing import final
 import fitz
+fitz.restore_aliases()
 import re
 from gm3.gm3.pparser import IssueParser
 from src import dictionaries as dc
