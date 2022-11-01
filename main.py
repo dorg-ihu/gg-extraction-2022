@@ -6,7 +6,6 @@ from src.fek_parser import PreParser, FekParser
 
 
 def mainRE(textpath):
-    
     from rbner.structure import structure
     FPRS, STR = FekParser(textpath), structure(textpath)
     articles = FPRS.articles
@@ -50,11 +49,9 @@ def mainRSP(textpath):
             if responsibilities:
                 responsibilities_dict[AR_key] = responsibilities
                 print("We found {} pairs of responsibilities on Article {} has been processed".format(len(responsibilities), AR_key))
-            
         except Exception as e:
             print("Article {} resulted in error {}".format(AR_key, e))
             pass
-    
     return responsibilities_dict
     
 
@@ -70,6 +67,7 @@ def main():
     if pathExists:
         text = PreParser().pdf2text(filepath)
         #print(".txt file generated")
+        #TODO add os-check that file has successfully generated
         textpath = re.sub(r".pdf$", ".txt", filepath)
 
         if task == "RE":
@@ -78,7 +76,10 @@ def main():
             results = mainRSP(textpath)
     else:
         print("Invalid filepath")
-    print(results)
+    #TODO call a future module to create the required output form - graph/rdf/text etc
+
+    print(results, "\n")
+    print(f"{len(results)} results found")
     return
 
 if __name__ == '__main__':
