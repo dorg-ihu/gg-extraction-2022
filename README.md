@@ -22,10 +22,29 @@ The administration of countries as well as the structure of the respective minis
 
 To install, simply git clone this ![repo](https://github.com/dorg-ihu/gg-extraction-2022/tree/testing).
 
-Afterwards you need to install the #requirements
-...  
-These instructions will get you a copy of the project up and running on your local machine for development 
-and testing purposes. See [deployment](#deployment) for notes on how to deploy the project on a live system.
+Afterwards you need to install the ![requirements](https://github.com/dorg-ihu/gg-extraction-2022/blob/testing/requirements_gg22.txt). This can be done by:  
+`pip install -r requirements_gg22.txt`
+
+After setting all up, one can use command line to get the results that is interested in.  
+All you have to do is to execute ![main.py](https://github.com/dorg-ihu/gg-extraction-2022/blob/testing/main.py) by providing the filepath of the pdf file you wish to parse and the respective task.  
+The task can be either **RE** (stands for relation-extraction) or **RSP** (responsibility assignment).  
+
+You can directly test, using the files available on file ![fek](https://github.com/dorg-ihu/gg-extraction-2022/tree/testing/fek-organismoi-upourgeiwn).
+For example Simply execute:  
+`python main.py --filepath fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf --task RE`
+
+## ✍️ Authors <a name = "authors"></a>
+- [@Ioannis Konstantinidis](https://github.com/ikonstas-ds)  
+- [@Konstantinos Christantonis](https://github.com/konschri)
+- [@Eleni Kapantai](https://github.com/ekapantai)
 
 
-`pip install pandas`
+See also the list of [contributors](https://github.com/dorg-ihu/gg-extraction-2022/graphs/contributors) 
+who participated in this project.
+
+## 🎉 Acknowledgments <a name = "acknowledgments"></a>
+We are really grateful on the authors of the following tools:
+- ![gsoc2018-GG-extraction](https://github.com/eellak/gsoc2018-GG-extraction)
+- ![gsoc2018-3gm](https://github.com/eellak/gsoc2018-3gm)
+
+on which we relied on ... +text
