@@ -1,9 +1,8 @@
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 import networkx as nx
-#rbner = rbNER()
+from src import kw_dictionary as kdc
 import re
-# import matplotlib.pyplot as plt
 
 
 class structure():
@@ -13,18 +12,11 @@ class structure():
         self.rbner = rbNER()
         self.FekP = FekParser(textpath)
         #TODO consider for keywords : [ "έχει", "είναι" , "κατανέμονται στ" , "κατανέμονται μεταξύ" ]
-        self.body_keywords = ["υπάγεται", "συγκροτούν", "αποτελείται από", "αποτελούνται από", "συγκροτούν τα", "διαρθρώνεται ως", "διαρθρώνεται",
-                         "διαρθρώνονται", "συγκροτείται", "Συγκροτείται", "απαρτίζεται από", "διαμορφώνεται σε", "περιλαμβάνει",
-                         "περιλαμβάνονται", "περιλαμβάνουν", "υπαγόμενες", "υπάγονται", "μέσω των", "λειτουργούν", "ακόλουθη διάρθρωση"]
-        self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό", "αρμοδιότητες"]
-        
-        self.title_keywords = ["ΔΙΑΡΘΡΩΣΗ", "Διάρθρωση", "ΔΙΆΡΘΡΩΣΗ"]
-        #self.keywords = ["ΥΠΑΓΕΤΑΙ", "ΣΥΓΚΡΟΤΟΥΝ"]
-        self.unit_keywords = ["Τμήμα", "ΤΜΗΜΑ", "Γραφείο", "ΓΡΑΦΕΙΟ ", "Γραφεία", "ΓΡΑΦΕΙΑ ", "Αυτοτελές", "ΑΥΤΟΤΕΛΕΣ ", "Αυτοτελή", "ΑΥΤΟΤΕΛΗ ", "Διεύθυνση", "ΔΙΕΥΘΥΝΣ", 
-                              "Μονάδα", "ΜΟΝΑΔΑ", "Γραμματεία", "ΓΡΑΜΜΑΤΕIA ", "Υπηρεσία"]
-        self.irrelevant_title = ["Προσόντα", "ΠΡΟΣΟΝΤΑ", "Προσωπικό", "Προσωπικού", "Διορισμ", "ΔΙΟΡΙΣΜ", "προσωπικού", 
-                                 "Κλάδοι", "Προϊστάμενοι", "Προϊσταμένων", "Περίγραμμα θέσης", "Περιγράμματα θέσεων", "Περίγραμμα Θέσης", "Περιγράμματα Θέσεων",
-                                 "Έναρξη ισχύος"]
+        self.body_keywords = kdc.rbre_kws
+        self.irrelevant_keywords = kdc.rbre_ikws
+        self.title_keywords = kdc.rbre_tkws
+        self.unit_keywords = kdc.rbre_ukws
+        self.irrelevant_title = kdc.irrelevant_title
     
     def get_potential_title(self, levels):
         if len(levels) > 1:
@@ -33,29 +25,6 @@ class structure():
             return ""
     
     
-    # def get_paragraph_levels(self, paragraphs):
-    #     paragraph_levels = []
-    #     for k, par in paragraphs.items():
-    #         i, j = 0, 1
-    #         paragraph_levels.append(par, i)
-    #         extra_potential_splits = self.FekP.split_all(par)
-    #         print(extra_potential_splits)
-    #         if extra_potential_splits:
-    #             for ps in extra_potential_splits:
-        
-        
-        
-        
-    #     # self.rbner.hybridNER(sublevels[0])
-        
-        
-    #     if children:
-    #         for child in children:
-    #             tmp = child.find_element_by_xpath("./div")
-    #             attr = tmp.get_attribute('data-name')
-    #             dynamic_list.append((attr, i))
-    #             get_items_level(child, i+1)
-    # get_items_level(q)
     def find_master_unit(self, paragraphs):
         master_unit = ""
         for key, value in paragraphs.items():
