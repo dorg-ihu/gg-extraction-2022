@@ -323,7 +323,8 @@ import time
 start_time = time.time()
 
 #from src.respa_extractor import RespExtractor
-#from rbner.rbNER import rbNER
+from rbner.rbNER import rbNER
+rbner = rbNER()
 #import random
 
 from rbner.respas import respas
@@ -332,6 +333,7 @@ from rbner.structure import structure
 import re
 from collections import OrderedDict
 
+from src.rb_respas_tool import respas
 
 
 
@@ -350,10 +352,10 @@ text = PreParser().pdf2text(filepath)
 
 """change the filename extenstion to .txt"""
 textpath = re.sub(r".pdf$", ".txt", filepath)
-
+FPRS, RSP = FekParser(textpath), respas(textpath)
 """initialize the objects for relation and responsibilities extraction"""
 FPRS, STR, RSP = FekParser(textpath), structure(textpath), respas(textpath)
-rbner = rbNER()
+
 
 """get articles on the given text"""
 articles = FPRS.articles
