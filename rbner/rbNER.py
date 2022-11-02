@@ -9,7 +9,7 @@ import unicodedata as ud
 import pandas as pd
 from collections import Counter
 # from gr_nlp_toolkit import Pipeline
-
+from src import kw_dictionary as kdc
 
 class rbNER():
     
@@ -20,8 +20,7 @@ class rbNER():
         self.stop = stopwords.words('greek')
         self.threshold = 0.8
         # self.nlp = Pipeline("pos,ner,dp")
-        self.unit_keywords = ["ΤΜΗΜΑ", "ΤΜΗΜΑΤΟΣ", "ΓΡΑΦΕΙΟ ", "ΓΡΑΦΕΙΑ ", "ΑΥΤΟΤΕΛΕΣ ", "ΑΥΤΟΤΕΛΗ ", "ΔΙΕΥΘΥΝΣ", "ΥΠΗΡΕΣΙΑ", 
-							  "ΣΥΜΒΟΥΛΙ", 'ΓΡΑΜΜΑΤΕΙΑ ', "ΥΠΟΥΡΓ", "ΕΙΔΙΚΟΣ ΛΟΓΑΡΙΑΣΜΟΣ", "ΜΟΝΑΔ", "ΠΕΡΙΦΕΡΕΙ", "ΑΡΧΗ", "ΑΡΧΕΣ", "ΣΩΜΑ", "ΓΕΝΙΚΗ", "ΕΠΙΤΡΟΠΗ"]
+        self.unit_keywords = kdc.rbner_kws
         
     
     def hybridNER(self, txt):
@@ -29,14 +28,15 @@ class rbNER():
             1. get possible entities from regex that finds words with first letter capitalized,
             2. keep those that contain any of the keywords defined on constructor """
         initial_entities = rbNER.regex_entities(txt)
-        initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
+        initial_clean_entities = [rbNER.remove_intonations(x) for x in initial_entities]
+        initial_dict = dict(zip(initial_entities, initial_clean_entities))
         # print("Initially, {} candidate entities".format(len(initial_entities)))
         # print(initial_entities, "\n")
         entities = []
-        for ent in initial_entities:
+        for (k, v) in initial_dict.items():
             for keyword in self.unit_keywords:
-                if keyword in ent:
-                    entities.append(ent)
+                if keyword in v:
+                    entities.append(k)
                     break
         return entities 
     
@@ -232,37 +232,37 @@ class rbNER():
             return ents
     
     
-    def dummyfuzzy(self, txt):
-        txt = self.remove_intonations(txt)
-        txt = self.remove_punct_and_digits(txt).replace("\n", " ").replace("  ", " ")
+    # def dummyfuzzy(self, txt):
+    #     txt = self.remove_intonations(txt)
+    #     txt = self.remove_punct_and_digits(txt).replace("\n", " ").replace("  ", " ")
         
-        topN = 3
-        results = process.extract(txt, self.gazlist, limit=topN)
-        results = process.extractOne(txt, self.gazlist, limit=topN)
-        return results
+    #     topN = 3
+    #     results = process.extract(txt, self.gazlist, limit=topN)
+    #     results = process.extractOne(txt, self.gazlist, limit=topN)
+    #     return results
     
     
-    def sentences_with_keywords(self, txt):
-        """ cleans the given text and afterwards splits into sentences. Finally iterates through the sentences and returns those that
-            contain any of the unit identifications as they were introduced during the constructor.
-        """
-        #TODO write a method that performs basic txt cleaning
-        txt = self.remove_intonations(txt)
-        txt = self.acronyms(txt, replace=True)
-        txt = self.clean_up_txt(txt)
-        sentences = sent_tokenize(txt, language="Greek")
-        sentence_cands = []
-        for unit in self.unit_keywords:
-            for sentence in sentences:
-                if unit in sentence.upper():
-                    sentence_cands.append(sentence)
-        unique_cands = set(sentence_cands)
-        return unique_cands
+    # def sentences_with_keywords(self, txt):
+    #     """ cleans the given text and afterwards splits into sentences. Finally iterates through the sentences and returns those that
+    #         contain any of the unit identifications as they were introduced during the constructor.
+    #     """
+    #     #TODO write a method that performs basic txt cleaning
+    #     txt = self.remove_intonations(txt)
+    #     txt = self.acronyms(txt, replace=True)
+    #     txt = self.clean_up_txt(txt)
+    #     sentences = sent_tokenize(txt, language="Greek")
+    #     sentence_cands = []
+    #     for unit in self.unit_keywords:
+    #         for sentence in sentences:
+    #             if unit in sentence.upper():
+    #                 sentence_cands.append(sentence)
+    #     unique_cands = set(sentence_cands)
+    #     return unique_cands
         
     
-    def grnlptoolkit(self, text):
-        doc = self.nlp(text)
-        return doc
+    # def grnlptoolkit(self, text):
+    #     doc = self.nlp(text)
+    #     return doc
 
 
 
