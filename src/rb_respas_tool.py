@@ -1,6 +1,7 @@
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 from src import dictionaries as dc
+from src import kw_dictionary as kdc
 from collections import OrderedDict
 import re
 
@@ -8,20 +9,12 @@ import re
 class respas():
     
     def __init__(self, textpath):
-        
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
-        
-        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα", "αρμόδια", "ΑΡΜΟΔΙΑ"]
-        
-        self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό"]
-        
-        self.title_keywords = ["ΑΡΜΟΔΙΟΤΗΤΕΣ", "Αρμοδιότητες", "ΑΡΜΟΔΙΌΤΗΤΕΣ"]
-        
-        self.irrelevant_title = ["Προσόντα", "ΠΡΟΣΟΝΤΑ", "Προσωπικό", "Προσωπικού", "Διορισμ", "ΔΙΟΡΙΣΜ", "προσωπικού", 
-                                 "Κλάδοι", "Προϊστάμενοι", "Προϊσταμένων", "Περίγραμμα θέσης", "Περιγράμματα θέσεων", "Περίγραμμα Θέσης", "Περιγράμματα Θέσεων",
-                                 "Έναρξη ισχύος"]
-        
+        self.body_keywords = kdc.rbrsp_kws
+        self.irrelevant_keywords = kdc.rbrsp_ikws
+        self.title_keywords = kdc.rbrsp_tkws
+        self.irrelevant_title = kdc.irrelevant_title
 
     def remove_first_level(self, txt):
         first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
