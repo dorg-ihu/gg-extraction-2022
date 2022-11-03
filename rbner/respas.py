@@ -12,7 +12,7 @@ class respas():
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         
-        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα", "αρμόδια", "ΑΡΜΟΔΙΑ"]
+        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα", "αρμόδια", "ΑΡΜΟΔΙΑ", "Αρμοδιότητες"]
         
         self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό"]
         
@@ -26,7 +26,12 @@ class respas():
     def remove_first_level(self, txt):
         first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
         first_line = re.sub(r"^[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", first_line)
-        return first_line + rest_lines
+        return "\n" + first_line + rest_lines
+
+    def remove_number_level(self, txt):
+        first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
+        first_line = re.sub(r"^[ ]*[0-9]+[\.\)] ", "", first_line)
+        return "\n" + first_line + rest_lines
 
     
     def find_master_unit(self, paragraphs):
@@ -57,21 +62,20 @@ class respas():
         split_all = self.FPRS.split_all_int(txt)
         split_all = [x for x in split_all if isinstance(x, tuple)]
     
-        split_all = {k:v for k,v in split_all}
-        pointers_list = list(split_all.keys())
+        pointers_list = [x[0] for x in split_all]
         
         levels = self.get_paragraph_levels(pointers_list)
         depth = 1
         type_of_levels = {levels[0][1]: depth}
-        info = [levels[0] + (depth,) + (split_all[levels[0][0]],)]  
+        info = [levels[0] + (depth,) + (split_all[0][1],)]
         for idx, (key, tag) in enumerate(levels[1:]):
             if tag not in type_of_levels:
                 depth += 1
                 type_of_levels[tag] = depth
-                info.append((key, tag) + (depth,) + (split_all[key],))
+                info.append((key, tag) + (depth,) + (split_all[idx+1][1],))
             else:
                 cur_depth = type_of_levels[tag]
-                info.append((key, tag) + (cur_depth,) + (split_all[key],))
+                info.append((key, tag) + (cur_depth,) + (split_all[idx+1][1],))
         
         # reconstructs the flat list of points into groups under the depth = 1
         split_points = [i for i, (point, typ, dep, text) in enumerate(info) if dep == 1]
@@ -109,7 +113,7 @@ class respas():
         responsibilities = OrderedDict()
         for idx, paragraph in enumerate(paragraphs):
             try:
-                new_par = self.remove_first_level(paragraph)
+                new_par = self.remove_number_level(paragraph)
                 grouped_info, depth = self.find_levels_depth(new_par)
             except Exception as e:
                 print("The following paragraph", idx, "caused error", e)
