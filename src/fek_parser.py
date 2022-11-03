@@ -220,16 +220,25 @@ class FekParser(IssueParser):
         return par_pattern, level_0_inds
             
     
+
     def find_article_paragraphs(self, text):
         '''
         Split article into paragraphs and return them as a dict
         '''
+        def prob_func(match):
+            thegroup = match.group(0)
+            return thegroup[:2] + ". " + thegroup[2:]
+        
         
         # before anything try to replace common mistakes for the following abbreviations
         text = self.replace_abbreviations(text)
+        problematic_pattern = r"\n(\d{1}α{1})[).]"
+        text = re.sub(problematic_pattern, prob_func, text)
+        
         
         pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
         pars = re.split(pattern, text)
+
         # print(len(pars))
         # for par in pars:
         #     print(f"pars are {par}")
@@ -248,7 +257,6 @@ class FekParser(IssueParser):
         # else:
         #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
         par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
-
         # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
         par_splits = re.split(par_pattern, text)
@@ -289,7 +297,7 @@ class FekParser(IssueParser):
         splits = re.split(dc.split_all_pattern, text)
         if splits[0] in dc.all_combs:
             splits.insert(0, "")
-        
+
         final_splits = [(splits[i-1], f"{splits[i-1]}) {splits[i]}") for i in range(2, len(splits), 2)]
         final_splits.insert(0, splits[0])
         return final_splits
