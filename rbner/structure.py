@@ -142,17 +142,42 @@ class structure():
     
     
     def get_relations_graph(self, relations):
-        G = nx.DiGraph()
-        for relation in relations:
-            # for tup in relation:
-            #     G.add_edges_from(tup)
-            G.add_edges_from(relation)
-        print("The created graph has {} nodes and {} edges".format(len(G.nodes), len(G.edges)))
-        #print(G.nodes)
-        #print(len(set(G.nodes)))
 
-        pos = self.topo_pos(G)
-        nx.draw(G, pos=pos, with_labels=False, node_size=20, arrowsize=5)
+        import pandas as pd
+        import matplotlib.pyplot as plt
+        
+        interim_relations = [t for sublist in relations for l in sublist for t in l]
+        final_relations = []
+        for i in range(0, len(interim_relations), 2):
+            final_relations.append((interim_relations[i], interim_relations[i+1]))
+        
+        
+        the_subject = [x[0] for x in final_relations]
+        the_object = [x[1] for x in final_relations]
+        
+        df = pd.DataFrame({"subject": the_subject,
+                           "object": the_object})
+        
+        G=nx.from_pandas_edgelist(df, "subject", "object", 
+                          edge_attr=True, create_using=nx.MultiDiGraph())
+        plt.figure(figsize=(30,10))
+        pos = nx.spring_layout(G)
+        nx.draw(G, with_labels=True, node_color='red', edge_cmap=plt.cm.Blues, pos = pos)
+        plt.show()
+        
+        
+        
+        # G = nx.DiGraph()
+        # for relation in relations:
+        #     # for tup in relation:
+        #     #     G.add_edges_from(tup)
+        #     G.add_edges_from(relation)
+        # print("The created graph has {} nodes and {} edges".format(len(G.nodes), len(G.edges)))
+        # #print(G.nodes)
+        # #print(len(set(G.nodes)))
+
+        # pos = self.topo_pos(G)
+        # nx.draw(G, pos=pos, with_labels=False, node_size=20, arrowsize=5)
         
         #pos = nx.spring_layout(G, scale = 3)
         # nx.draw_networkx(G, pos=pos, with_labels=False, node_size=20, arrowsize=5)
