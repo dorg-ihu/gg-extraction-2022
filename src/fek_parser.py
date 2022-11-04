@@ -219,7 +219,7 @@ class FekParser(IssueParser):
         level_0_inds += [len(levels)]
         return par_pattern, level_0_inds
             
-    
+        
 
     def find_article_paragraphs(self, text):
         '''
@@ -229,9 +229,24 @@ class FekParser(IssueParser):
             thegroup = match.group(0)
             return thegroup[:2] + ". " + thegroup[2:]
         
+        def cleanIntosai(match):
+            thegroup = match.group(0)
+            intodict = dc.intodict
+            
+            for k,v in intodict.items():
+                thegroup = thegroup.replace(k, v)
+            if "INTOSAI" in thegroup:
+                return "*INTOSAI*"
+            else:
+                return thegroup
         
         # before anything try to replace common mistakes for the following abbreviations
         text = self.replace_abbreviations(text)
+        
+        intosai_pattern = r"\(.{4}S.+\)"
+        text = re.sub(intosai_pattern, cleanIntosai, text)
+        
+        # also get rid of the problematic pattern 3α. which will turn into 3. α. 
         problematic_pattern = r"\n(\d{1}α{1})[).]"
         text = re.sub(problematic_pattern, prob_func, text)
         
