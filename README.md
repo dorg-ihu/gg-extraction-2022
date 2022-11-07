@@ -4,6 +4,7 @@
 ---
 
 <h3 align="center">GG-Extraction-2022</h3>
+NOTE: THIS REPO IS UNDER CONSTRUCTION SOME ATTRIBUTES MAY NOT BE FULLY FUNCTIONAL
 
 ## 📝 Table of Contents
 - [Problem Definition](#problem_statement)
@@ -29,9 +30,22 @@ After setting all up, one can use command line to get the results that is intere
 All you have to do is to execute ![main.py](https://github.com/dorg-ihu/gg-extraction-2022/blob/testing/main.py) by providing the filepath of the pdf file you wish to parse and the respective task.  
 The task can be either **RE** (stands for relation-extraction) or **RSP** (responsibility assignment).  
 
+## 🎈 Usage <a name="usage"></a>
 You can directly test, using the files available on file ![fek](https://github.com/dorg-ihu/gg-extraction-2022/tree/testing/fek-organismoi-upourgeiwn).
-For example Simply execute:  
+For example one can simply execute:  
 `python main.py --filepath fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf --task RE`
+
+In case you are interested in other subtasks you may execute the following:  
+* Apply named-entity recognition on given legal text  
+```
+from rbner.rbNER import rbNER  
+rbner = rbNER()  
+results = rbner.hybridNER(text)
+```
+* Another subtask to describe ... (maybe paragraphs)
+```
+...
+```
 
 ## ✍️ Authors <a name = "authors"></a>
 - [@Ioannis Konstantinidis](https://github.com/ikonstas-ds)  
