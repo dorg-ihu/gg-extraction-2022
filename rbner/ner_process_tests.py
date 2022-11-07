@@ -349,7 +349,7 @@ filepath = "fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017
 #filepath = "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
-#filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
 
 """initialize PreParser that produces a .txt file on working directory"""
 text = PreParser().pdf2text(filepath)
