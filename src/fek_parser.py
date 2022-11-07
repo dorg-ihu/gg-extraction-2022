@@ -139,8 +139,20 @@ class PreParser:
         doc = doc.replace("-\n", "")
         doc = doc.replace("−\n", "")
         
+        
+        current_number_of_lines = len(doc.splitlines())
         doc = self.parenthesis_line_merging(doc)
         doc = self.bracket_line_merging(doc)
+        last_number_of_lines = len(doc.splitlines())
+
+        while True:
+            if current_number_of_lines == last_number_of_lines:
+                break
+            else:
+                current_number_of_lines = last_number_of_lines
+                doc = self.parenthesis_line_merging(doc)
+                doc = self.bracket_line_merging(doc)
+                last_number_of_lines = len(doc.splitlines())
 
         if savefile:
             savepath = re.sub(r".pdf$", ".txt", fekpath)
@@ -190,12 +202,13 @@ class FekParser(IssueParser):
 
     
     def par_split_ids_with_duplicates(self, text):
-        par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
-
+        # par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
+        par_pattern = rf"[\n]\(?{dc.all_combs_pat}[).] *"
+        
         q = re.findall(par_pattern,text)  # get all listed keys
-
+        print("q ", q)
         levels = self.get_paragraph_levels(q)
-
+        print("levels ", levels)
         # get first level indices for numbers
         ak = 0
         level_0 = levels[0]
@@ -217,6 +230,7 @@ class FekParser(IssueParser):
                             ak += 0
                             is_correct = True
         level_0_inds += [len(levels)]
+        # print(par_pattern)
         return par_pattern, level_0_inds
             
         
@@ -253,7 +267,7 @@ class FekParser(IssueParser):
         
         pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
         pars = re.split(pattern, text)
-
+        # print(f"pars are {pars}")
         # print(len(pars))
         # for par in pars:
         #     print(f"pars are {par}")
@@ -272,6 +286,7 @@ class FekParser(IssueParser):
         # else:
         #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
         par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        print(level_0_inds)
         # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
         par_splits = re.split(par_pattern, text)
