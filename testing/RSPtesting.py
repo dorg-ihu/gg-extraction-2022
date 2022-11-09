@@ -1,31 +1,41 @@
 import pandas as pd
-from rbner.rbNER import rbNER
 from collections import OrderedDict
+import re
+from src.fek_parser import PreParser, FekParser
+from rbner.respas import respas
+import numpy as np
+from fuzzywuzzy import fuzz
 
 path = "testing/RSP_testdata.xlsx"
 groundtruth = pd.read_excel(path)
-rbner = rbNER()
+
+groundtruth["gtruth"] = list(zip(groundtruth.Unit, groundtruth.NoRespa))
+groundtruth.drop("Unit", inplace=True, axis=1)
+groundtruth.drop("NoRespa", inplace=True, axis=1)
 
 data = groundtruth.groupby(by=["Ministry","Article"])
-respass = data.sum("NoRespa")
-texts = data.Text.apply(list)
+
+gtruth = data.gtruth.apply(list)
 paths = data.Path.apply(list)
 ar_keys = data.Article.apply(list)
+combined = pd.concat([paths, ar_keys, gtruth], axis=1)
 
-combined = respass.assign(Text=texts).assign(Path=paths).assign(Article=ar_keys)
 combined["Article"] = [x[0] for x in combined["Article"]]
 combined["Path"] = [x[0] for x in combined["Path"]]
-combined["Text"] = [x[0] for x in combined["Text"]]
 
 
-def main(text, textpath, ar_key):
+def main(path, ar_key):
 
     result = OrderedDict()
-    from src.fek_parser import FekParser
-    from rbner.respas import respas
-    FPRS, RSP = FekParser(textpath), respas(textpath)
     
-    article_paragraphs = FPRS.find_article_paragraphs(text)
+    text = PreParser().pdf2text(path)
+    textpath = re.sub(r".pdf$", ".txt", path)
+    
+    FPRS, RSP = FekParser(textpath), respas(textpath)
+    articles = FPRS.articles
+    
+    article = articles[ar_key]
+    article_paragraphs = FPRS.find_article_paragraphs(article)
     if len(article_paragraphs) > 1:
         possible_title = article_paragraphs["0"]
         if any(title_kw in possible_title for title_kw in RSP.irrelevant_title):
@@ -40,11 +50,32 @@ def main(text, textpath, ar_key):
     return result
 
 
-combined["results"] = [main(row["Text"], row["Path"], row["Article"]) for idx, row in combined.iterrows()]
-combined.drop("Text", inplace=True, axis=1)
+combined["results"] = [main(row["Path"], row["Article"]) for idx, row in combined.iterrows()]
 combined.drop("Path", inplace=True, axis=1)
 
-results_df = combined[["Article", "results"]].to_dict()["results"]
+new_combined = combined.copy(deep=True)
+
+def process_results(od):
+    thelist = []
+    for k, v in od.items():
+        thelist.append((k, len(v)))
+    return thelist
+
+def validate_results(gtruth, results):
+    found = True
+    ziplist = list(zip(gtruth, results))
+    for ele in ziplist:
+        print(ele[0][0],"<===>", ele[1][0])
+        if fuzz.ratio(ele[0][0], ele[1][0]) > 0.8 and ele[0][1]== ele[1][1]:
+            pass
+        else:
+            found = False
+            break    
+    return found
+
+new_combined["PredictedResults"] = [process_results(x) for x in new_combined["results"]]
+new_combined["validation"] = [validate_results(row["gtruth"], row["PredictedResults"]) for idx, row in new_combined.iterrows()]
+print(f"The tool has correclty identified the responsibilities for {new_combined['validation'].sum()} articles, out of total {len(new_combined)}")
 
 
 
