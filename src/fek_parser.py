@@ -202,13 +202,13 @@ class FekParser(IssueParser):
 
     
     def par_split_ids_with_duplicates(self, text):
-        # par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
-        par_pattern = rf"[\n]\(?{dc.all_combs_pat}[).] *"
+        par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
+        # par_pattern = rf"[\n ][^(]?{dc.all_combs_pat}[).] *"
         
         q = re.findall(par_pattern,text)  # get all listed keys
-        print("q ", q)
+        # print("q ", q)
         levels = self.get_paragraph_levels(q)
-        print("levels ", levels)
+        # print("levels ", levels)
         # get first level indices for numbers
         ak = 0
         level_0 = levels[0]
@@ -286,7 +286,7 @@ class FekParser(IssueParser):
         # else:
         #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
         par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
-        print(level_0_inds)
+        # print(level_0_inds)
         # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
         par_splits = re.split(par_pattern, text)
