@@ -1,8 +1,8 @@
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import re
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize
+#from nltk.corpus import stopwords
+#from nltk.tokenize import sent_tokenize
 import string
 from string import digits
 import unicodedata as ud
@@ -17,7 +17,7 @@ class rbNER():
         self.gazpath = "rbner/gazetter_list.xlsx"
         self.data = pd.read_excel(self.gazpath)
         self.gazlist = self.gazlist_preprocess()
-        self.stop = stopwords.words('greek')
+        #self.stop = stopwords.words('greek')
         self.threshold = 0.8
         # self.nlp = Pipeline("pos,ner,dp")
         self.unit_keywords = kdc.rbner_kws
