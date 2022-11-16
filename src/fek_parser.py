@@ -1,5 +1,6 @@
 from typing import final
 import fitz
+fitz.restore_aliases()
 import re
 from gm3.gm3.pparser import IssueParser
 from src import dictionaries as dc
@@ -138,8 +139,20 @@ class PreParser:
         doc = doc.replace("-\n", "")
         doc = doc.replace("−\n", "")
         
+        
+        current_number_of_lines = len(doc.splitlines())
         doc = self.parenthesis_line_merging(doc)
         doc = self.bracket_line_merging(doc)
+        last_number_of_lines = len(doc.splitlines())
+
+        while True:
+            if current_number_of_lines == last_number_of_lines:
+                break
+            else:
+                current_number_of_lines = last_number_of_lines
+                doc = self.parenthesis_line_merging(doc)
+                doc = self.bracket_line_merging(doc)
+                last_number_of_lines = len(doc.splitlines())
 
         if savefile:
             savepath = re.sub(r".pdf$", ".txt", fekpath)
@@ -156,7 +169,14 @@ class FekParser(IssueParser):
     def __init__(self, filename, stdin=False, toTxt=False):
         super().__init__(filename, stdin, toTxt)
     
-
+    
+    def replace_abbreviations(self, text):
+        replacements = dc.abbr_replacements
+        for k, v in replacements:
+            text = text.replace(k, v)
+        return text
+            
+    
     def check_duplicate_pars(self, pars):
         '''
         Check if there are duplicates in paragraphs due to cases with same numbering as paragraphs
@@ -183,11 +203,12 @@ class FekParser(IssueParser):
     
     def par_split_ids_with_duplicates(self, text):
         par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
-
+        # par_pattern = rf"[\n ][^(]?{dc.all_combs_pat}[).] *"
+        
         q = re.findall(par_pattern,text)  # get all listed keys
-
+        # print("q ", q)
         levels = self.get_paragraph_levels(q)
-
+        # print("levels ", levels)
         # get first level indices for numbers
         ak = 0
         level_0 = levels[0]
@@ -209,42 +230,83 @@ class FekParser(IssueParser):
                             ak += 0
                             is_correct = True
         level_0_inds += [len(levels)]
+        # print(par_pattern)
         return par_pattern, level_0_inds
             
-    
+        
+
     def find_article_paragraphs(self, text):
         '''
         Split article into paragraphs and return them as a dict
         '''
+        def prob_func(match):
+            thegroup = match.group(0)
+            return thegroup[:2] + ". " + thegroup[2:]
+        
+        def cleanIntosai(match):
+            thegroup = match.group(0)
+            intodict = dc.intodict
+            
+            for k,v in intodict.items():
+                thegroup = thegroup.replace(k, v)
+            if "INTOSAI" in thegroup:
+                return "*INTOSAI*"
+            else:
+                return thegroup
+        
+        # before anything try to replace common mistakes for the following abbreviations
+        text = self.replace_abbreviations(text)
+        
+        intosai_pattern = r"\(.{4}S.+\)"
+        text = re.sub(intosai_pattern, cleanIntosai, text)
+        
+        # also get rid of the problematic pattern 3α. which will turn into 3. α. 
+        problematic_pattern = r"\n(\d{1}α{1})[).]"
+        text = re.sub(problematic_pattern, prob_func, text)
+        
         
         pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
         pars = re.split(pattern, text)
-        pars = [item.lstrip() for item in pars]
+        # print(f"pars are {pars}")
+        # print(len(pars))
+        # for par in pars:
+        #     print(f"pars are {par}")
+        # pars = [item.lstrip() for item in pars]
+        
+        par_dict = {}
 
-        has_duplicate_num = self.check_duplicate_pars(pars)
+        if len(pars) == 1:
+            par_dict['0'] = text
+            return par_dict
 
-        if not has_duplicate_num:
-            level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
-        else:
-            par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        # has_duplicate_num = self.check_duplicate_pars(pars)
 
+        # if not has_duplicate_num:
+        #     level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
+        # else:
+        #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
+        # print(level_0_inds)
+        # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
 
-            par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
-            par_dict = {}
-            if par_splits[0] in dc.all_combs:
-                par_splits.insert(0, "")
+        par_splits = re.split(par_pattern, text)
+        # for par in par_splits:
+        #     print(f"par is {par}")
+        #print(par_splits)
+        if par_splits[0] in dc.all_combs:
+            par_splits.insert(0, "")
 
-            par_dict['0'] = par_splits[0]
+        par_dict['0'] = par_splits[0]
 
-            # Split paragraphs based on the ids
-            for j in range(len(level_0_inds)-1):
-                par_split = par_splits[2*level_0_inds[j]+1:2*level_0_inds[j+1]+1]
-                par = ""
-                for k in range(0, len(par_split)-1, 2):
-                    par += f"\n{par_split[k]}. {par_split[k+1]}"
+        # Split paragraphs based on the ids
+        for j in range(len(level_0_inds)-1):
+            par_split = par_splits[2*level_0_inds[j]+1:2*level_0_inds[j+1]+1]
+            par = ""
+            for k in range(0, len(par_split)-1, 2):
+                par += f"\n{par_split[k]}. {par_split[k+1]}"
 
-                par = par.strip()
-                par_dict[str(j+1)] = par
+            par = par.strip()
+            par_dict[str(j+1)] = par
             
         return par_dict
     
@@ -260,8 +322,17 @@ class FekParser(IssueParser):
         return final_splits
 
 
+    def split_all_int(self, text):
+        
+        splits = re.split(dc.split_all_pattern, text)
+        if splits[0] in dc.all_combs:
+            splits.insert(0, "")
 
-
-
+        final_splits = [(splits[i-1], f"{splits[i-1]}) {splits[i]}") for i in range(2, len(splits), 2)]
+        final_splits.insert(0, splits[0])
+        return final_splits
+        
+            
+        
 
 

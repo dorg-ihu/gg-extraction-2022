@@ -191,6 +191,46 @@ textpath = re.sub(r".pdf$", ".txt", filepath)
 respas = RespExtractor(textpath).get_rough_unit_respa_associations(text)
 
 
+#%% Test Issue classifier from gg18
+
+from src.fek_parser import PreParser
+import re
+from main.classifier import IssueOrArticleRespAClassifier
+issue_clf = IssueOrArticleRespAClassifier('Issue')
+# filepath = "fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf"
+fekpaths = [
+    'fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-agrotikhsanaptukshskaitrofimwn-97-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-anaptiksiskaiependusewn-5-2022.pdf', # starts with Άρθρο τάδε + characters + προβλημα με τον πινακα στο τελος
+    'fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf', # τελευταίο άρθρο κενό
+    'fek-organismoi-upourgeiwn/yp-ekswterikwnapodimouellhnismou-4781-2022.pdf', # το κουλό
+    'fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-eswterikwn-141-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ethnikisaminas-2292-1995.pdf', # NO
+    'fek-organismoi-upourgeiwn/yp-klimatikhskrishskaipolitikhsprostasias-151-2004.pdf', # NO
+    'fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf', # τελευταίο άρθρο κενό
+    'fek-organismoi-upourgeiwn/yp-nautiliaskainhsiwtikhspolitikhs-13-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-paideiaskaithriskeumatwn-18-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-periballontoskaienergeias-132-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-politismoukaiathlitismou-4-2018.pdf',
+    'fek-organismoi-upourgeiwn/yp-prostasiastoupolith-62-2019.pdf',
+    'fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf',
+    'fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf',
+    'fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf'
+    ]
+
+
+
+for fek in fekpaths:
+    try:
+        text = PreParser().pdf2text(fek)
+        issue_prediction_result = issue_clf.has_respas(text)
+        print(fek, issue_prediction_result)
+    except Exception as e:
+        print("sorry ", e, fek)
+
+#%%
 
 
 
