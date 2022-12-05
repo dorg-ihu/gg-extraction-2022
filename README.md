@@ -51,6 +51,7 @@ results = rbner.hybridNER(text)
 - [@Ioannis Konstantinidis](https://github.com/ikonstas-ds)  
 - [@Konstantinos Christantonis](https://github.com/konschri)
 - [@Eleni Kapantai](https://github.com/ekapantai)
+- [@Alexandros Michailidis](https://github.com/michailidisa)
 
 
 See also the list of [contributors](https://github.com/dorg-ihu/gg-extraction-2022/graphs/contributors) 
