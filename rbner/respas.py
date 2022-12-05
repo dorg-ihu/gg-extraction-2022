@@ -1,6 +1,6 @@
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
-from src import dictionaries as dc
+from src import kw_dictionary as kdc
 from collections import OrderedDict
 import re
 
@@ -11,18 +11,34 @@ class respas():
         
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
+        self.body_keywords = kdc.rbrsp_kws
+        self.irrelevant_keywords = kdc.rbrsp_ikws
+        self.title_keywords = kdc.rbrsp_tkws
+        self.irrelevant_title = kdc.irrelevant_title
         
-        self.body_keywords = ["αρμοδιότητες", "ΑΡΜΟΔΙΟΤΗΤΕΣ", "αρμόδιο", "ΑΡΜΟΔΙΟ", "αρμοδιότητα", "αρμόδια", "ΑΡΜΟΔΙΑ", "Αρμοδιότητες"]
-        
-        self.irrelevant_keywords = ["σκοπό", "σκοπούς", "στόχο", "στόχους", "επιχειρησιακούς", "στρατηγικούς", "επιχειρησιακό", "στρατηγικό"]
-        
-        self.title_keywords = ["ΑΡΜΟΔΙΟΤΗΤΕΣ", "Αρμοδιότητες", "ΑΡΜΟΔΙΌΤΗΤΕΣ"]
-        
-        self.irrelevant_title = ["Προσόντα", "ΠΡΟΣΟΝΤΑ", "Προσωπικό", "Προσωπικού", "Διορισμ", "ΔΙΟΡΙΣΜ", "προσωπικού", 
-                                 "Κλάδοι", "Προϊστάμενοι", "Προϊσταμένων", "Περίγραμμα θέσης", "Περιγράμματα θέσεων", "Περίγραμμα Θέσης", "Περιγράμματα Θέσεων",
-                                 "Έναρξη ισχύος"]
-        
+    
+    def main(self, articles):
+        responsibilities_dict = OrderedDict()
+        for AR_key, AR_value in articles.items():
+            try:
+                article_paragraphs = self.FPRS.find_article_paragraphs(AR_value)
+                if len(article_paragraphs) > 1:
+                    possible_title = article_paragraphs["0"]
+                    if any(title_kw in possible_title for title_kw in self.irrelevant_title):
+                        print("Article {} has been skipped due to irrelevant_title".format(AR_key))
+                        continue
 
+                master_unit, responsibility_paragraphs = self.get_candidate_paragraphs_per_article(article_paragraphs) #input article text - output list of candidate paragraphs
+                responsibilities = self.get_respas(master_unit, responsibility_paragraphs) # input list of candidate paragraphs - ouput dictionary with unit-respa pairs
+                
+                if responsibilities:
+                    print(f"We found {len(responsibilities)} pairs of responsibilities on Article {AR_key}")
+                    responsibilities_dict[AR_key] = responsibilities
+            except Exception as e:
+                print(f"Article {AR_key} resulted in the following error: {e}")
+                pass
+        return responsibilities_dict
+    
     def remove_first_level(self, txt):
         first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
         first_line = re.sub(r"^[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", first_line)
@@ -43,47 +59,6 @@ class respas():
                 break
         return master_unit
 
-
-    def get_paragraph_levels(self, items):
-        levels = []
-        for i, item in enumerate(items):
-            if item in dc.alphabet:
-                levels.append((item, "alphabet"))  # alphabet
-            elif item in dc.ab_double_combs:
-                levels.append((item, "abcombinations"))  # ab combinations
-            elif item in dc.latin_numbers:
-                levels.append((item, "latinnumbers"))  # latin numbers
-            elif item in dc.numbers:
-                levels.append((item, "therest"))  #
-        return levels
-
-
-    def find_levels_depth(self, txt):
-        split_all = self.FPRS.split_all_int(txt)
-        split_all = [x for x in split_all if isinstance(x, tuple)]
-    
-        pointers_list = [x[0] for x in split_all]
-        
-        levels = self.get_paragraph_levels(pointers_list)
-        depth = 1
-        type_of_levels = {levels[0][1]: depth}
-        info = [levels[0] + (depth,) + (split_all[0][1],)]
-        for idx, (key, tag) in enumerate(levels[1:]):
-            if tag not in type_of_levels:
-                depth += 1
-                type_of_levels[tag] = depth
-                info.append((key, tag) + (depth,) + (split_all[idx+1][1],))
-            else:
-                cur_depth = type_of_levels[tag]
-                info.append((key, tag) + (cur_depth,) + (split_all[idx+1][1],))
-        
-        # reconstructs the flat list of points into groups under the depth = 1
-        split_points = [i for i, (point, typ, dep, text) in enumerate(info) if dep == 1]
-        total_split = split_points + [len(info)]
-        grouped_info = [info[i:j] for i, j in zip(split_points, total_split[1:])]
-    
-        return grouped_info, len(type_of_levels)
-    
     
     def has_respa_kws(self, txt):
         return any(str_kw in txt
@@ -114,7 +89,7 @@ class respas():
         for idx, paragraph in enumerate(paragraphs):
             try:
                 new_par = self.remove_number_level(paragraph)
-                grouped_info, depth = self.find_levels_depth(new_par)
+                grouped_info, depth = self.FPRS.find_levels_depth(new_par)
             except Exception as e:
                 print("The following paragraph", idx, "caused error", e)
                 continue

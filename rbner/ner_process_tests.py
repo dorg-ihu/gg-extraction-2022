@@ -58,10 +58,8 @@ def find_levels_depth(txt):
 import time
 start_time = time.time()
 
-#from src.respa_extractor import RespExtractor
 from rbner.rbNER import rbNER
 rbner = rbNER()
-#import random
 
 from rbner.respas import respas
 from src.fek_parser import PreParser, FekParser
@@ -76,12 +74,14 @@ from src.rb_respas_tool import respas
 """give a filepath (in .pdf form)"""
 filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
 filepath = "fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf"
-# filepath = "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf"
-
+filepath = "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-nautiliaskainhsiwtikhspolitikhs-13-2018.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf"
 #filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
-#filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
 filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
+filepath = "fek-organismoi-upourgeiwn/yp-periballontoskaienergeias-132-2017.pdf"
 
 """initialize PreParser that produces a .txt file on working directory"""
 text = PreParser().pdf2text(filepath)
@@ -94,34 +94,38 @@ FPRS, RSP = FekParser(textpath), respas(textpath)
 FPRS, STR = FekParser(textpath), structure(textpath)
 """initialize the objects for relation and responsibilities extraction"""
 FPRS, STR, RSP = FekParser(textpath), structure(textpath), respas(textpath)
-
+FPRS = FekParser(textpath)
 
 """get articles on the given text"""
 articles = FPRS.articles
+article40 = articles["Άρθρο 40"]
+paragraphs = FPRS.find_article_paragraphs(article40)
+#article2 = articles["Άρθρο 2"]
+#article_paragraphs = FPRS.find_article_paragraphs(article2)
+keys = ["Άρθρο 2", "Άρθρο 3"]
+filteredarticles = {key: articles[key] for key in keys if key in articles}
+#filteredarticles = {key: articles.get(key) for key in keys}
+relations = STR.main(filteredarticles)
+relations = STR.main(articles)
 
-#%% relations extraction
-relations_list = []
-for AR_key, AR_value in articles.items():
-    try:
-        article_paragraphs = FPRS.find_article_paragraphs(AR_value)
-        if len(article_paragraphs) > 1:
-            possible_title = article_paragraphs["0"]
-            if any(title_kw in possible_title for title_kw in STR.irrelevant_title):
-                print("Article {} has been skipped due to irrelevant_title".format(AR_key))
-                continue
-        
-        master_unit, relation_paragraphs = STR.get_candidate_paragraphs_per_article(article_paragraphs) # returns which paragraphs meet the STRUCTURE requirements
-        relations = STR.get_relations(master_unit, relation_paragraphs)
-        relations_list.append(relations)
-        print("Article {} has been processed".format(AR_key))
-    except Exception as e:
-        print("Article {} resulted in error".format(AR_key))
-        pass
-
-final_list = [x for x in relations_list if x]
+responsibilities = RSP.main(articles)
 
 
 
+"""tests"""
+article = articles["Άρθρο 2"]
+
+gi, depth = FPRS.find_levels_depth(paragraph)
+
+article_paragraphs = FPRS.find_article_paragraphs(article)
+paragraph = article_paragraphs["2"]
+new_par = STR.remove_number_level(paragraph)
+grouped_info, depth = STR.find_levels_depth(new_par)
+relations = STR.main(filteredarticles)
+
+#%%
+
+# final_list = [x for x in relations if x]
 
 import pydot
 from networkx.drawing.nx_pydot import to_pydot
