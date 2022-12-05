@@ -200,7 +200,51 @@ class FekParser(IssueParser):
                 levels.append(3)  #
         return levels
 
+
     
+    def find_levels_depth(self, txt):
+        
+        #TODO for testing purposes - remove later  
+        txt = self.replace_abbreviations(txt)
+        
+        def paragraph_levels_alternative(items):
+            levels = []
+            for i, item in enumerate(items):
+                if item in dc.alphabet:
+                    levels.append((item, "alphabet"))  # alphabet
+                elif item in dc.ab_double_combs:
+                    levels.append((item, "abcombinations"))  # ab combinations
+                elif item in dc.latin_numbers:
+                    levels.append((item, "latinnumbers"))  # latin numbers
+                elif item in dc.numbers:
+                    levels.append((item, "therest"))  #
+            return levels  
+        
+        split_all = self.split_all_int(txt)
+        split_all = [x for x in split_all if isinstance(x, tuple)]
+    
+        pointers_list = [x[0] for x in split_all]
+        
+        levels = paragraph_levels_alternative(pointers_list)
+        depth = 1
+        type_of_levels = {levels[0][1]: depth}
+        info = [levels[0] + (depth,) + (split_all[0][1],)]
+        for idx, (key, tag) in enumerate(levels[1:]):
+            if tag not in type_of_levels:
+                depth += 1
+                type_of_levels[tag] = depth
+                info.append((key, tag) + (depth,) + (split_all[idx+1][1],))
+            else:
+                cur_depth = type_of_levels[tag]
+                info.append((key, tag) + (cur_depth,) + (split_all[idx+1][1],))
+        
+        # reconstructs the flat list of points into groups under the depth = 1
+        split_points = [i for i, (point, typ, dep, text) in enumerate(info) if dep == 1]
+        total_split = split_points + [len(info)]
+        grouped_info = [info[i:j] for i, j in zip(split_points, total_split[1:])]
+    
+        return grouped_info, len(type_of_levels)
+
     def par_split_ids_with_duplicates(self, text):
         par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
         # par_pattern = rf"[\n ][^(]?{dc.all_combs_pat}[).] *"
