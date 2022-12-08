@@ -9,7 +9,7 @@ Create fixed lexical resources
 alphabet = ['α','β','γ','δ','ε','στ','ζ','η','θ','ι','ια','ιβ','ιγ','ιδ','ιε','ιστ','ιζ','ιη','ιθ','ικ','κ','κα','κβ','κγ','κδ','κε','κστ','κζ','κη','κθ','λ','λα','λβ','λγ','λδ','λε','λστ','λη','λθ',
             'μ','μα','μβ','μγ','μδ','με','μστ','μη','μθ','ν','ξ','ο','π','ρ','σ','τ','υ','φ','χ','ψ','ω']
 latin_numbers = ['i','ii','iii','iv','v','vi','vii','viii','ix','x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx']
-numbers = [str(item) for item in list(range(1,10))]
+numbers = [str(item) for item in list(range(1,15))]
 ab_combs = [''.join(comb) for comb in product(alphabet, repeat=2)]
 double_combs = [comb*2 for comb in ab_combs]
 t = alphabet.pop(13) # remove ν. due to laws
