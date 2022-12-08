@@ -128,8 +128,7 @@ if __name__ == "__main__":
     
     
     # url = "https://www.kodiko.gr/nomothesia/document/308558"
-    # email = "christantonis.kons@gmail.com"
-    # password = 123456
+
     
     base_url = "https://www.kodiko.gr/"
     options = Options()
