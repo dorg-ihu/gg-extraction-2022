@@ -4,7 +4,7 @@ import pandas as pd
 import re
 from fuzzywuzzy import fuzz
 
-path = "testing/RE_testdata.xlsx"
+path = "testing/RE_testdata_v2.xlsx"
 groundtruth = pd.read_excel(path)
 
 data = groundtruth.groupby(by=["Ministry","Article"])
@@ -29,18 +29,10 @@ def main(path, ar_key):
     FPRS, STR = FekParser(textpath), structure(textpath)
     articles = FPRS.articles
     
-    article = articles[ar_key]
-    article_paragraphs = FPRS.find_article_paragraphs(article)
-    if len(article_paragraphs) > 1:
-        possible_title = article_paragraphs["0"]
-        if any(title_kw in possible_title for title_kw in STR.irrelevant_title):
-            print("Article {} has been skipped due to irrelevant_title".format(ar_key))
-            return []
-        
-    master_unit, relation_paragraphs = STR.get_candidate_paragraphs_per_article(article_paragraphs) # returns which paragraphs meet the STRUCTURE requirements
-    relations = STR.get_relations(master_unit, relation_paragraphs)
-    print("Article {} has been processed".format(ar_key))
-    return relations
+    content = articles[ar_key]
+    article = {ar_key:content}
+    return STR.main(article)
+    
 
 
 def reform_results(list_of_tuples):
@@ -61,15 +53,24 @@ def validate_results(unit, subunit, resunit, ressubunit):
          found = False
     return found
 
+
+def clear_tuple_info(list_of_tuples):
+    reslist = []
+    for ele in list_of_tuples:
+        reslist.append((ele[2], ele[3]))
+    return reslist
+
+
 combined["results"] = [main(row["Path"], row["Article"]) for idx, row in combined.iterrows()]
+combined["fresults"] = [clear_tuple_info(x) if x else "" for x in combined["results"]]
 combined.drop("Path", inplace=True, axis=1)
 
-results_df = combined[["Article", "results"]].to_dict()["results"] # to manually inspect
+results_df = combined[["Article", "fresults"]].to_dict()["fresults"] # to manually inspect
 
 combined["results_number"] = [len(x) for x in combined["results"]]
 new_combined = combined.copy(deep=True)
-new_combined["ResultUnit"] = [x[0][0] if x else "" for x in new_combined["results"]]
-new_combined["ResultSubunit"] = [reform_results(x) if x else "" for x in new_combined["results"]]
+new_combined["ResultUnit"] = [x[0][0] if x else "" for x in new_combined["fresults"]]
+new_combined["ResultSubunit"] = [reform_results(x) if x else "" for x in new_combined["fresults"]]
 new_combined["validation"] = [validate_results(row["Unit"], row["Subunit"], row["ResultUnit"], row["ResultSubunit"]) for idx, row in new_combined.iterrows()]
 print(f"The tool has correclty identified the relations for {new_combined['validation'].sum()} articles, out of total {len(new_combined)}")
 

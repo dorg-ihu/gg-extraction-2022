@@ -33,6 +33,20 @@ text = PreParser().pdf2text(filepath)
 """change the filename extenstion to .txt"""
 textpath = re.sub(r".pdf$", ".txt", filepath)
 
+#ML testing
+from src.fek_parser import PreParser, FekParser
+import re
+filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
+text = PreParser().pdf2text(filepath)
+textpath = re.sub(r".pdf$", ".txt", filepath)
+from ML.mlre import stuctureML as sml
+STR, FPRS = sml(textpath), FekParser(textpath)
+articles = FPRS.articles
+relations = STR.main(articles)
+
+
+
+
 
 FPRS, RSP = FekParser(textpath), respas(textpath)
 FPRS, STR = FekParser(textpath), structure(textpath)
