@@ -5,8 +5,8 @@ from polyfuzz import PolyFuzz
 
 from src import kw_dictionary as kdc
 from src.fek_parser import FekParser
-from rdfpandas.graph import to_graph
-import rdflib
+from fuzzywuzzy import fuzz
+from string import punctuation
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
@@ -20,6 +20,7 @@ import re
 
 class stuctureML():
     def __init__(self, textpath):
+        
         self.body_keywords = kdc.rbre_kws
         self.irrelevant_keywords = kdc.rbre_ikws
         self.FPRS = FekParser(textpath)
@@ -61,9 +62,13 @@ class stuctureML():
         #invalid_paragraphs_df = data_df.loc[data_df["tokens"] >= 512]
 
         relations_df = self.structure_ml(paragraphs_df)
-        print(relations_df.head())
-        #self.visualize_pairs(relations_df)
-        print(time.time() - START)
+
+        print(f"Execution time: {time.time() - START}")
+        g = self.get_rdf(relations_df)
+        
+        self.visualize_rdf_graph(g)
+        #self.visualize_rdf_graph_pydot(g)
+        
         return relations_df
     
     def process_ner_output(self, entity_mention, inputs):
@@ -120,28 +125,23 @@ class stuctureML():
         for (idx, row) in paragraphs.iterrows():
             print(f"row {idx} === \n {row}")
             for string in row:
-                print(type(string))
                 row = re.sub("\([Α-Ωα-ω]*.[Α-Ωα-ω.]*\)","",string)
                 row = re.sub(' +', ' ',row)
                 
             ner_output = self.ner_pip(str(row))
-            print("ner_output: ", len(ner_output))
             re_input = self.process_ner_output(ner_output, str(row))
-            print("re_input: ", len(re_input))
             
             re_output = []
             for idx in range(len(re_input)):
                 tmp_re_output = self.re_pip(re_input[idx]["re_input"])
                 re_output.append(tmp_re_output[0])
-            print("re_output: ", len(re_output))
-            
+
             re_ner_output = self.post_process_re_output(re_output, str(row), ner_output, re_input)
-            print("before appending")
             for rel in re_ner_output["relation"]:
               the_subject.append(rel['arg1']['word'])
               the_object.append(rel['arg2']['word'])
               relationship.append(rel['relation_type']['label'])
-        print("loop ended")    
+   
         kg_df = pd.DataFrame({"subject":the_subject, "object": the_object, "relation": relationship})
         kg_df = kg_df.drop_duplicates()
         
@@ -165,6 +165,17 @@ class stuctureML():
               kg_df = kg_df.replace(rslt_df["From"][i],rslt_df["Group"][i])
         
         kg_df = kg_df[kg_df['subject'] != kg_df['object']]
+        
+        initial_answers = list(zip(kg_df.subject, kg_df.object))
+        unique_answers = self.unique(initial_answers)
+        
+        answers = []
+        for ele in unique_answers:
+          if fuzz.ratio(ele[0], ele[1]) > 90:
+            continue
+          if len(ele[1].translate(str.maketrans('', '', punctuation))) > 10:
+            answers.append(ele)
+
         return kg_df                
     
     
@@ -188,6 +199,11 @@ class stuctureML():
                 if is_structure_related and not is_irrelevant:
                     relation_paragraphs.append(value)
         return relation_paragraphs
+    
+    
+    def unique(self, sequence):
+        seen = set()
+        return [x for x in sequence if not (x in seen or seen.add(x))]
     
     
     def visualize_pairs(self, df):
@@ -214,14 +230,38 @@ class stuctureML():
         
     
     def get_rdf(self, df):
-        #namespace_manager = NamespaceManager(Graph())
-        g = to_graph(df)
-        ttl = g.serialize(format = 'turtle')
-        with open('test.ttl', 'wb') as file:
-            file.write(ttl)
+        from rdflib import Graph, Literal
+        g = Graph()
+        for index, row in df.iterrows():
+            g.add((Literal(row['subject']), Literal(row['relation']), Literal(row['object'])))
         
+        g.serialize(destination='graph.rdf', format='turtle')
+        return g
+    
         
+    def visualize_rdf_graph(self, g):
+        import matplotlib.pyplot as plt
+        import networkx as nx
         
+        nx_graph = nx.Graph()
+        for s, p, o in g:
+            nx_graph.add_edge(s, o, attr_dict={p: g.predicates(s, o)})
         
+        plt.figure(figsize=(25, 25))
+        nx.draw_kamada_kawai(nx_graph, with_labels=True)
+        plt.show()    
+
+    def visualize_rdf_graph_pydot(self, g):
+        import networkx as nx
+        
+        nx_graph = nx.Graph()
+        for s, p, o in g:
+            nx_graph.add_edge(s, o, attr_dict={p: g.predicates(s, o)})
+        
+        pydot_graph = nx.nx_pydot.to_pydot(nx_graph)
+        pydot_graph.set_rankdir('LR')
+        pydot_graph.write_png('graph.png', encoding='UTF-8')
+        print("Png file created at your directory")
+
         
         
