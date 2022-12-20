@@ -15,11 +15,10 @@ import re
 
 
 
-
-
-
 class stuctureML():
     def __init__(self, textpath):
+        
+        self.savename = textpath.split("/")[1].split(".")[0]
         
         self.body_keywords = kdc.rbre_kws
         self.irrelevant_keywords = kdc.rbre_ikws
@@ -37,7 +36,7 @@ class stuctureML():
         self.bert = Embeddings(self.embeddings)
         self.bert_model = PolyFuzz(self.bert)
         
-        self.tokens_limit = 256
+        self.tokens_limit = 512
         return
         
     
@@ -58,16 +57,16 @@ class stuctureML():
         data_df["tokens"] = [len(tokenizer.tokenize(x)) for x in data_df["paragraphs"]]
         valid_paragraphs_df = data_df.loc[data_df["tokens"] < self.tokens_limit]
         paragraphs_df = valid_paragraphs_df[["paragraphs"]]
-        paragraphs_df.to_csv("module_testing_paragraphs.csv", index=False)
+        #paragraphs_df.to_csv("module_testing_paragraphs.csv", index=False)
         #invalid_paragraphs_df = data_df.loc[data_df["tokens"] >= 512]
 
         relations_df = self.structure_ml(paragraphs_df)
-
+        
         print(f"Execution time: {time.time() - START}")
         g = self.get_rdf(relations_df)
         
-        self.visualize_rdf_graph(g)
-        #self.visualize_rdf_graph_pydot(g)
+        #self.visualize_rdf_graph(g)
+        self.visualize_rdf_graph_pydot(g)
         
         return relations_df
     
@@ -123,7 +122,6 @@ class stuctureML():
         print(f"The number of detected paragraphs after applying rules is {len(paragraphs)}")
         
         for (idx, row) in paragraphs.iterrows():
-            print(f"row {idx} === \n {row}")
             for string in row:
                 row = re.sub("\([Α-Ωα-ω]*.[Α-Ωα-ω.]*\)","",string)
                 row = re.sub(' +', ' ',row)
@@ -164,19 +162,24 @@ class stuctureML():
             if rslt_df["To"][i] in kg_df.values:
               kg_df = kg_df.replace(rslt_df["From"][i],rslt_df["Group"][i])
         
+
         kg_df = kg_df[kg_df['subject'] != kg_df['object']]
-        
-        initial_answers = list(zip(kg_df.subject, kg_df.object))
+
+
+        initial_answers = list(zip(kg_df.subject, kg_df.object, kg_df.relation))
         unique_answers = self.unique(initial_answers)
+        
+
         
         answers = []
         for ele in unique_answers:
-          if fuzz.ratio(ele[0], ele[1]) > 90:
-            continue
-          if len(ele[1].translate(str.maketrans('', '', punctuation))) > 10:
-            answers.append(ele)
-
-        return kg_df                
+            if fuzz.ratio(ele[0], ele[1]) > 90 or len(ele[1].split())==1:
+                continue
+            
+            if len(ele[1].translate(str.maketrans('', '', punctuation))) > 10:
+              answers.append(ele)
+        
+        return pd.DataFrame(answers, columns=["subject", "object", "relation"])     
     
     
     def has_structure_kws(self, txt):
@@ -235,7 +238,7 @@ class stuctureML():
         for index, row in df.iterrows():
             g.add((Literal(row['subject']), Literal(row['relation']), Literal(row['object'])))
         
-        g.serialize(destination='graph.rdf', format='turtle')
+        g.serialize(destination=self.savename+'.rdf', format='turtle')
         return g
     
         
@@ -260,7 +263,8 @@ class stuctureML():
         
         pydot_graph = nx.nx_pydot.to_pydot(nx_graph)
         pydot_graph.set_rankdir('LR')
-        pydot_graph.write_png('graph.png', encoding='UTF-8')
+        
+        pydot_graph.write_png(self.savename+'.png', encoding='UTF-8')
         print("Png file created at your directory")
 
         
