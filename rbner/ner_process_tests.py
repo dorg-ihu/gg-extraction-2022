@@ -1,38 +1,41 @@
-#%% libraries and initialization of objects (common for both tasks)
-import time
-start_time = time.time()
 
-from rbner.rbNER import rbNER
-rbner = rbNER()
+filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf",
+             "fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf",
+             "fek-organismoi-upourgeiwn/yp-nautiliaskainhsiwtikhspolitikhs-13-2018.pdf",
+             "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-periballontoskaienergeias-132-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-prostasiastoupolith-62-2019.pdf",
+             "fek-organismoi-upourgeiwn/yp-politismoukaiathlitismou-4-2018.pdf",
+             "fek-organismoi-upourgeiwn/yp-paideiaskaithriskeumatwn-18-2018.pdf",
+             "fek-organismoi-upourgeiwn/yp-eswterikwn-141-2017.pdf",
+             "fek-organismoi-upourgeiwn/yp-ekswterikwnapodimouellhnismou-4781-2022.pdf",
+             "fek-organismoi-upourgeiwn/yp-dikaiosunhs-6-2021.pdf",
+             "fek-organismoi-upourgeiwn/yp-anaptiksiskaiependusewn-5-2022.pdf",
+             "fek-organismoi-upourgeiwn/yp-agrotikhsanaptukshskaitrofimwn-97-2017.pdf"
+             ]
 
-from rbner.respas import respas
-from src.fek_parser import PreParser, FekParser
-from rbner.structure import structure
-import re
-from collections import OrderedDict
 
-from src.rb_respas_tool import respas
-
-
-
-"""give a filepath (in .pdf form)"""
-filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-ygeias-121-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-nautiliaskainhsiwtikhspolitikhs-13-2018.pdf"
-#filepath = "fek-organismoi-upourgeiwn/yp-tourismou-127-2017.pdf"
-#filepath = "fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-ypodomwnkaimetaforwn-123-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-oikonomikwn-142-2017.pdf"
-filepath = "fek-organismoi-upourgeiwn/yp-periballontoskaienergeias-132-2017.pdf"
-
-"""initialize PreParser that produces a .txt file on working directory"""
-text = PreParser().pdf2text(filepath)
-
-"""change the filename extenstion to .txt"""
-textpath = re.sub(r".pdf$", ".txt", filepath)
-
+for fpath in filepaths:
+    from src.fek_parser import PreParser, FekParser
+    import re
+    text = PreParser().pdf2text(fpath)
+    textpath = re.sub(r".pdf$", ".txt", fpath)
+    from ML.mlre import stuctureML as sml
+    STR, FPRS = sml(textpath), FekParser(textpath)
+    articles = FPRS.articles
+    relations = STR.main(articles)
+    print(f"The {fpath} has been processed")
+    
+    
+    
+    
+    
+    
+    
 #ML testing
 from src.fek_parser import PreParser, FekParser
 import re
