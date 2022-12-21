@@ -19,6 +19,8 @@ filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf",
              ]
 
 
+filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"]
+
 for fpath in filepaths:
     from src.fek_parser import PreParser, FekParser
     import re
@@ -31,8 +33,15 @@ for fpath in filepaths:
     print(f"The {fpath} has been processed")
     
     
-    
-    
+for fpath in filepaths:
+    from src.fek_parser import PreParser, FekParser
+    import re
+    text = PreParser().pdf2text(fpath)
+    textpath = re.sub(r".pdf$", ".txt", fpath)
+    from rbner.structure import structure
+    FPRS, STR = FekParser(textpath), structure(textpath)
+    articles = FPRS.articles
+    relations = STR.main(articles)
     
     
     

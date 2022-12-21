@@ -241,18 +241,4 @@ class structure():
         return final_list
      
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  
