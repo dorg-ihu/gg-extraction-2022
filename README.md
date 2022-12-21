@@ -27,24 +27,43 @@ Afterwards you need to install the ![requirements](https://github.com/dorg-ihu/g
 `pip install -r requirements_gg22.txt`
 
 After setting all up, one can use command line to get the results that is interested in.  
-All you have to do is to execute ![main.py](https://github.com/dorg-ihu/gg-extraction-2022/blob/testing/main.py) by providing the filepath of the pdf file you wish to parse and the respective task.  
-The task can be either **RE** (stands for relation-extraction) or **RSP** (responsibility assignment).  
+All you have to do is to execute 
+![main.py](https://github.com/dorg-ihu/gg-extraction-2022/blob/testing/main.py) by providing the filepath of the pdf file you wish to parse and the respective task and applied method.  
+* The task can be either **RE** (relation-extraction) or **RSP** (responsibility assignment).  
+* The method can be either **ML** (machine-learning) or **RB** (rule-based)  
 
 ## 🎈 Usage <a name="usage"></a>
 You can directly test, using the files available on file ![fek](https://github.com/dorg-ihu/gg-extraction-2022/tree/testing/fek-organismoi-upourgeiwn).
 For example one can simply execute:  
-`python main.py --filepath fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf --task RE`
+`python main.py --filepath fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf --task RE --method ML`  
+
+The above command will create in your directory an rdf file with the results as well as a .png file.
 
 In case you are interested in other subtasks you may execute the following:  
+
 * Apply named-entity recognition on given legal text  
 ```
 from rbner.rbNER import rbNER  
 rbner = rbNER()  
 results = rbner.hybridNER(text)
 ```
-* Another subtask to describe ... (maybe paragraphs)
+* Get the articles given a txt file
 ```
-...
+from src.fek_parser FekParser
+FPRS = FekParser(textpath)
+articles = FPRS.articles
+```
+
+* Get the paragraphs given a txt file and a piece of text (normally an article)
+```
+from src.fek_parser FekParser
+FPRS = FekParser(textpath)
+paragraphs = FPRS.find_article_paragraphs(text)
+```
+
+* Scrape amendments from kodiko.gr (account required). For more information see [] 
+```
+python amendments_detector.py --filepath https://www.kodiko.gr/nomothesia/document/308558 --email example@example.com --password --br firefox
 ```
 
 ## ✍️ Authors <a name = "authors"></a>
