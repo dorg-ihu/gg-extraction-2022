@@ -39,10 +39,12 @@ class respas():
                 pass
         return responsibilities_dict
     
+    
     def remove_first_level(self, txt):
         first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
         first_line = re.sub(r"^[ ]*[α-ωΑ-Ω0-9]+[\.\)] ", "", first_line)
         return "\n" + first_line + rest_lines
+
 
     def remove_number_level(self, txt):
         first_line, rest_lines = txt.split("\n", 1)[0], "\n" + txt.split("\n", 1)[1]
@@ -63,6 +65,7 @@ class respas():
     def has_respa_kws(self, txt):
         return any(str_kw in txt
                    for str_kw in self.body_keywords)
+    
     
     def has_irrelevant_kws(self, txt):
         return any(flag_kw in txt

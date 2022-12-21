@@ -215,7 +215,6 @@ class structure():
         nx.draw(G, with_labels=True, node_color='red', edge_cmap=plt.cm.Blues, pos = pos)
         plt.show()
         
-        return ""
     
     
     def topo_pos(self, G):
@@ -239,19 +238,6 @@ class structure():
                 interim_list.append((unit, subunit))
             final_list.append(interim_list)
         return final_list
-     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     
