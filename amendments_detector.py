@@ -111,6 +111,7 @@ def main(driver, url):
         
     return amendments
 
+
 if __name__ == "__main__":
     short_sleep, long_sleep = 1, 4
     
@@ -125,11 +126,9 @@ if __name__ == "__main__":
     email = args.email
     password = args.password
     browser = args.br
-    
-    
+        
     # url = "https://www.kodiko.gr/nomothesia/document/308558"
 
-    
     base_url = "https://www.kodiko.gr/"
     options = Options()
     options.page_load_strategy = 'eager'
@@ -142,8 +141,9 @@ if __name__ == "__main__":
     driver.get(base_url)
     
     driver = login(driver, email, password)
-    print("Successfully loged in. Now please wait this might take a while ...")
+    print("Successfully logged in. Now please wait this might take a while ...")
     results = main(driver, url)
+    print(results.keys())
     
     
 
