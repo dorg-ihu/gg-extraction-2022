@@ -1,15 +1,12 @@
+from src import kw_dictionary as kdc
+from collections import Counter
 from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
-import re
-#from nltk.corpus import stopwords
-#from nltk.tokenize import sent_tokenize
-import string
 from string import digits
 import unicodedata as ud
 import pandas as pd
-from collections import Counter
-# from gr_nlp_toolkit import Pipeline
-from src import kw_dictionary as kdc
+import string
+import re
+
 
 class rbNER():
     
@@ -17,9 +14,7 @@ class rbNER():
         self.gazpath = "rbner/gazetter_list.xlsx"
         self.data = pd.read_excel(self.gazpath)
         self.gazlist = self.gazlist_preprocess()
-        #self.stop = stopwords.words('greek')
         self.threshold = 0.8
-        # self.nlp = Pipeline("pos,ner,dp")
         self.unit_keywords = kdc.rbner_kws
         
     
@@ -30,8 +25,7 @@ class rbNER():
         initial_entities = rbNER.regex_entities(txt)
         initial_clean_entities = [rbNER.remove_intonations(x) for x in initial_entities]
         initial_dict = dict(zip(initial_entities, initial_clean_entities))
-        # print("Initially, {} candidate entities".format(len(initial_entities)))
-        # print(initial_entities, "\n")
+
         entities = []
         for (k, v) in initial_dict.items():
             for keyword in self.unit_keywords:
@@ -48,16 +42,13 @@ class rbNER():
             3. try to match the remaining with the gazetteer list """
         initial_entities = rbNER.regex_entities(txt)
         initial_entities = [rbNER.remove_intonations(x) for x in initial_entities]
-        # print("Initially, {} candidate entities".format(len(initial_entities)))
-        # print(initial_entities, "\n")
+
         interim_entities = []
         for ent in initial_entities:
             for keyword in self.unit_keywords:
                 if keyword in ent:
                     interim_entities.append(ent)
                     break
-        # print("After keywords validation step, {} remained".format(len(interim_entities)))
-        # print(interim_entities, "\n")
         
         final_entities = []
         for ient in interim_entities:
@@ -66,9 +57,8 @@ class rbNER():
                 if score >= self.threshold:
                     final_entities.append(ient)
                     break
-        # print("Finally {} entities are returned".format(len(final_entities)))
-        # print(final_entities, "\n")
-        return interim_entities 
+
+        return final_entities 
     
     
     def hybridNER_index(self, txt):
@@ -79,16 +69,14 @@ class rbNER():
             * different from hybridNER on also returning the index margins for each match"""
         initial_entities = rbNER.regex_entities_index(txt)
         initial_entities = [(rbNER.remove_intonations(x[0]), x[1], x[2]) for x in initial_entities]
-        print("Initially, {} candidate entities".format(len(initial_entities)))
-        print(initial_entities, "\n")
+
         interim_entities = []
         for ent, start, end in initial_entities:
             for keyword in self.unit_keywords:
                 if keyword in ent:
                     interim_entities.append((ent, start, end))
                     break
-        print("After keywords validation step, {} remained".format(len(interim_entities)))
-        print(interim_entities, "\n")
+
         final_entities = []
         for ient, start, end in interim_entities:
             for gaz in self.gazlist:
@@ -96,8 +84,7 @@ class rbNER():
                 if score >= self.threshold:
                     final_entities.append((ient, start, end))
                     break
-        print("Finally {} entities are returned".format(len(final_entities)))
-        print(final_entities, "\n")
+
         return final_entities 
     
     
@@ -115,7 +102,6 @@ class rbNER():
     
     
     @staticmethod
-    #TODO check if this is already taken into account on PreParser
     def clean_up_txt(txt):
         txt = re.sub('[\t ]+', ' ', txt)
         txt = re.sub('\-[\s]+', '', txt)
@@ -146,8 +132,6 @@ class rbNER():
     
     @staticmethod
     def remove_articles(txt):
-        """ 
-        """
         tobeRemoved = ["O", "H", "Το", "Τον", "Τη", "Την", "Οι", "Ένας", "Μία", "Ένα"]
         resultwords = [word for word in re.split("\W+", txt) if word not in tobeRemoved]
         return ' '.join(resultwords)
@@ -182,7 +166,7 @@ class rbNER():
         d = {ord('\N{COMBINING ACUTE ACCENT}'):None}
         return ud.normalize('NFD',txt).upper().translate(d)
         
-    # MAYBE TURN THIS INTO A PRIVATE METHOD IDK
+
     def gazlist_preprocess(self):
         """ upon call removes units from the gazeteer list that seem irrelevant or exist as duplicates 
             and cleans the remaining unit names (remove punctuation and digits)
@@ -231,42 +215,6 @@ class rbNER():
         else:
             return ents
     
-    
-    # def dummyfuzzy(self, txt):
-    #     txt = self.remove_intonations(txt)
-    #     txt = self.remove_punct_and_digits(txt).replace("\n", " ").replace("  ", " ")
-        
-    #     topN = 3
-    #     results = process.extract(txt, self.gazlist, limit=topN)
-    #     results = process.extractOne(txt, self.gazlist, limit=topN)
-    #     return results
-    
-    
-    # def sentences_with_keywords(self, txt):
-    #     """ cleans the given text and afterwards splits into sentences. Finally iterates through the sentences and returns those that
-    #         contain any of the unit identifications as they were introduced during the constructor.
-    #     """
-    #     #TODO write a method that performs basic txt cleaning
-    #     txt = self.remove_intonations(txt)
-    #     txt = self.acronyms(txt, replace=True)
-    #     txt = self.clean_up_txt(txt)
-    #     sentences = sent_tokenize(txt, language="Greek")
-    #     sentence_cands = []
-    #     for unit in self.unit_keywords:
-    #         for sentence in sentences:
-    #             if unit in sentence.upper():
-    #                 sentence_cands.append(sentence)
-    #     unique_cands = set(sentence_cands)
-    #     return unique_cands
-        
-    
-    # def grnlptoolkit(self, text):
-    #     doc = self.nlp(text)
-    #     return doc
-
-
-
-
 
 
 
