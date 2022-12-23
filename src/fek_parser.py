@@ -192,7 +192,7 @@ class FekParser(IssueParser):
         for i, item in enumerate(items):
             if item in dc.alphabet:
                 levels.append(0)  # alphabet
-            elif item in dc.ab_double_combs:
+            elif item in dc.ab_combs:
                 levels.append(1)  # ab combinations
             elif item in dc.latin_numbers:
                 levels.append(2)  # latin numbers
@@ -212,7 +212,7 @@ class FekParser(IssueParser):
             for i, item in enumerate(items):
                 if item in dc.alphabet:
                     levels.append((item, "alphabet"))  # alphabet
-                elif item in dc.ab_double_combs:
+                elif item in dc.ab_combs:
                     levels.append((item, "abcombinations"))  # ab combinations
                 elif item in dc.latin_numbers:
                     levels.append((item, "latinnumbers"))  # latin numbers
@@ -246,40 +246,41 @@ class FekParser(IssueParser):
         return grouped_info, len(type_of_levels)
 
     def par_split_ids_with_duplicates(self, text):
-        par_pattern = rf"[\n ]\(?{dc.all_combs_pat}[).] *"
-        # par_pattern = rf"[\n ][^(]?{dc.all_combs_pat}[).] *"
         
-        q = re.findall(par_pattern,text)  # get all listed keys
+        # par_pattern = rf"[\n ][^(]?{dc.all_combs_pat}[).] *"
+
+        q = re.findall(dc.par_pattern,text)  # get all listed keys
         # print("q ", q)
         levels = self.get_paragraph_levels(q)
         # print("levels ", levels)
         # get first level indices for numbers
         ak = 0
         level_0 = levels[0]
+
+        ref_list = dc.level_to_list[level_0]
+
         level_0_inds = []
         is_correct = True
         for i in range(len(q)):
             if (levels[i] == level_0) and is_correct:
-                if q[i] == dc.numbers[ak]:
+                if q[i] == ref_list[ak]:
                     level_0_inds.append(i)
                     ak += 1
                 else:
                     qk = 0
-                    if q[i] == dc.numbers[qk]:
-                        # current_level = levels[i]
+                    if q[i] == ref_list[qk]:
                         is_correct = False
                     else:
-                        if q[i] == dc.numbers[ak]:
+                        if q[i] == ref_list[ak]:
                             level_0_inds.append(i)
                             ak += 0
                             is_correct = True
         level_0_inds += [len(levels)]
-        # print(par_pattern)
-        return par_pattern, level_0_inds
+
+        return level_0_inds
             
         
-
-    def find_article_paragraphs(self, text):
+    def find_article_paragraphs(self, text, split_level='article'):
         '''
         Split article into paragraphs and return them as a dict
         '''
@@ -308,35 +309,22 @@ class FekParser(IssueParser):
         problematic_pattern = r"\n(\d{1}α{1})[).]"
         text = re.sub(problematic_pattern, prob_func, text)
         
-        
-        pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
-        pars = re.split(pattern, text)
-        # print(f"pars are {pars}")
-        # print(len(pars))
-        # for par in pars:
-        #     print(f"pars are {par}")
-        # pars = [item.lstrip() for item in pars]
-        
         par_dict = {}
+       
+        if split_level == 'article':
 
-        if len(pars) == 1:
-            par_dict['0'] = text
-            return par_dict
+            pattern = r"\n(\d{1,2})[).]"  # e.g. \n1. TEXT
+            pars = re.split(pattern, text)
 
-        # has_duplicate_num = self.check_duplicate_pars(pars)
+            if len(pars) == 1:
+                par_dict['0'] = text
+                return par_dict
 
-        # if not has_duplicate_num:
-        #     level_0_inds = [i for i in range(len(pars)) if pars[i].isdigit()] + [len(pars)]
-        # else:
-        #     par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
-        par_pattern, level_0_inds = self.par_split_ids_with_duplicates(text)
-        # print(level_0_inds)
-        # par_splits = re.split(par_pattern, text) if has_duplicate_num else pars
+        level_0_inds = self.par_split_ids_with_duplicates(text)
 
-        par_splits = re.split(par_pattern, text)
-        # for par in par_splits:
-        #     print(f"par is {par}")
-        #print(par_splits)
+        par_splits = re.split(dc.par_pattern, text)
+
+
         if par_splits[0] in dc.all_combs:
             par_splits.insert(0, "")
 
@@ -375,6 +363,43 @@ class FekParser(IssueParser):
         final_splits = [(splits[i-1], f"{splits[i-1]}) {splits[i]}") for i in range(2, len(splits), 2)]
         final_splits.insert(0, splits[0])
         return final_splits
+    
+
+    def process_last_split(self, par_dict):
+        '''
+        This function is used for post processing results of MLRespa
+        '''
+        keys = list(par_dict.keys())
+        keys.sort()
+
+        last_split = " " + par_dict[keys[-1]]  # added space to be able to get also the initial numbering based on the regex
+
+        q = re.findall(dc.par_pattern,last_split)
+
+        w = self.get_paragraph_levels(q)
+
+        par_level = w[0]
+
+        k = 0
+        i = 1
+        for i in range(1, len(w)):
+            if w[i] != par_level:
+                if dc.level_to_list[w[i]][k] != q[i]:
+                    break
+                k += 1
+        
+        par_splits = re.split(dc.par_pattern, last_split)
+
+        par_splits[1] += "."
+        par_dict[keys[-1]] = " ".join(par_splits[1:2*i+1])
+
+        return par_dict
+        
+
+
+
+
+
         
             
         
