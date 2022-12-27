@@ -9,6 +9,7 @@ class respas():
     
     def __init__(self, textpath):
         
+        self.savename = textpath.split("/")[1].split(".")[0]
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         self.body_keywords = kdc.rbrsp_kws
@@ -37,7 +38,29 @@ class respas():
             except Exception as e:
                 print(f"Article {AR_key} resulted in the following error: {e}")
                 pass
+        
+        import pandas as pd
+        results = []
+        for key, value in responsibilities_dict.items(): # here key has the AR_key value
+            for k, v in value.items():
+                if v:
+                    results.append((k, key, v))
+        pdresults = pd.DataFrame(results, columns=["Unit", "Article", "Value"])
+        self.get_rdf(pdresults)
+        
         return responsibilities_dict
+    
+    
+    def get_rdf(self, df):
+        from rdflib import Graph, Literal
+        g = Graph()
+        for index, row in df.iterrows():
+            g.add((Literal(row['Unit']), Literal(row['Article']), Literal(row['Value'])))
+        
+        g.serialize(destination="RSP_"+self.savename+'.rdf', format='turtle')
+        
+    
+
     
     
     def remove_first_level(self, txt):
