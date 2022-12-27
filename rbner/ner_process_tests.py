@@ -20,6 +20,45 @@ filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf",
 
 
 filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"]
+filepaths = ["fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf"]
+
+
+for fpath in filepaths:
+    from src.fek_parser import PreParser, FekParser
+    import re
+    text = PreParser().pdf2text(fpath)
+    textpath = re.sub(r".pdf$", ".txt", fpath)
+    from src.mlrsp import farm
+    RSP, FPRS = farm(textpath), FekParser(textpath)
+    articles = FPRS.articles
+    
+    # keys = ["Άρθρο 16"]
+    # filteredarticles = {key: articles[key] for key in keys if key in articles}
+    
+    respas = RSP.main(articles)
+    print(f"The {fpath} has been processed")
+
+import pandas as pd
+results = []
+for key, value in respas.items():
+    for k, v in value.items():
+        results.append((key, k, v))
+
+pdresults = pd.DataFrame(results, columns=["Article", "Unit", "Respas"])
+pdresults.to_csv("mlrsp_results_psifiakisdiakuvernhshs.csv", encoding="utf-8")
+
+
+
+
+
+
+
+
+
+
+results = pd.DataFrame(respas)
+results = pd.DataFrame.from_dict(respas, orient='index').reset_index()
+
 
 for fpath in filepaths:
     from src.fek_parser import PreParser, FekParser
