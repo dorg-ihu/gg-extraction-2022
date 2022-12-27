@@ -1,40 +1,31 @@
 from haystack.nodes import FARMReader
 from haystack.schema import Document
-
-#import torch
-
-from fuzzywuzzy import fuzz
 from collections import OrderedDict
+from fuzzywuzzy import fuzz
 
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 from src import kw_dictionary as kdc
-# from early_stopping import EarlyStopping
-# import torch
-# torch.cuda.empty_cache()
-
-#reader = FARMReader(model_name_or_path="alexaapo/greek_legal_bert_v2", use_gpu=True, top_k=1, context_window_size=256, max_seq_len=512, batch_size=25, doc_stride=128)
-#earlystopper = early_stopping.EarlyStopping(save_dir="haystack/model")
-
-#data_dir = "haystack/data"
-
-# reader.train(data_dir=data_dir, train_filename="answers_short_expanded.json", use_gpu=True, n_epochs=5, batch_size=5, save_dir="haystack/model")
-#reader.train(data_dir=data_dir, train_filename="long_paragraphs_answers.json", use_gpu=True, n_epochs=3, batch_size=5, save_dir="haystack/model")
 
 
 class farm():
-    def __init__(self, textpath, model_name_or_path="alexaapo/greek_legal_bert_v2", data_path="haystack/data", train_filename="long_paragraphs_answers.json", use_gpu=True):
+    def __init__(self, textpath, model_name_or_path="alexaapo/greek_legal_bert_v2", data_path="haystack/data", train_filename="long_paragraphs_answers.json", use_gpu=True, reTrain=False):
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         
-        self.reader = FARMReader(model_name_or_path, use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
-        self.data_dir = data_path
-        self.reader.train(data_dir=self.data_dir, train_filename=train_filename, use_gpu=True, n_epochs=3, batch_size=5, save_dir="haystack/model")
+        if reTrain:
+            self.reader = FARMReader("alexaapo/greek_legal_bert_v2", use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
+            self.data_dir = data_path
+            self.reader.train(data_dir=self.data_dir, train_filename=train_filename, use_gpu=True, n_epochs=3, batch_size=5, save_dir="haystack/model")
+        else:
+            self.reader = FARMReader("haystack/model", use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
+
         
         self.body_keywords = kdc.rbrsp_kws
         self.irrelevant_keywords = kdc.rbrsp_ikws
         #self.title_keywords = kdc.rbrsp_tkws
         self.irrelevant_title = kdc.irrelevant_title
+    
         
     def main(self, articles):
         responsibilities_dict = OrderedDict()
@@ -48,8 +39,8 @@ class farm():
                         continue
 
                 master_unit, responsibility_paragraphs = self.get_candidate_paragraphs_per_article(article_paragraphs)
+                print(f"On {AR_key} - {len(responsibility_paragraphs)} we found!!")
                 responsibilities = self.get_respas(master_unit, responsibility_paragraphs)
-                #responsibilities = self.
                 
                 if responsibilities:
                     print(f"We found {len(responsibilities)} pairs of responsibilities on Article {AR_key}")
@@ -100,26 +91,30 @@ class farm():
         responsibilities = OrderedDict()
         
         # if paragraphs on the 
-        if len(paragraphs) > 1:
-            for par in paragraphs:
-                entity = self.rbner.hybridNER(par)[0]
-                if not entity:
-                    entity = master_unit
-                query = self.get_query(entity)
-                result = self.reader.predict(query=query,
-                                             documents=[Document(content=par)],
-                                             top_k=3)
-                offset_status = self.get_answer_offset(result, entity)
-                if offset_status:
-                    answer = self.form_the_answer_span(offset_status, par)
-                
-                if entity in responsibilities:
-                    responsibilities[entity].extend(answer)
-                else:
-                    responsibilities[entity] = answer
+        #if len(paragraphs) > 1:
+        for par in paragraphs:
+            entity = self.rbner.hybridNER(par)[0]
+            if not entity:
+                entity = master_unit
+            query = self.get_query(entity)
+            result = self.reader.predict(query=query,
+                                         documents=[Document(content=par)],
+                                         top_k=3)
+            offset_status = self.get_answer_offset(result, entity)
+
+            if offset_status:
+                answer = self.form_the_answer_span(offset_status, par)
+            else:
+                continue
+                #TODO here if not offset status it bugs but needs further consideration. 
+                # It happens due to not finding the entity on context 
+            
+            if entity in responsibilities:
+                responsibilities[entity].extend(answer)
+            else:
+                responsibilities[entity] = answer
         
         return responsibilities
-    
     
     
     def get_query(self, entity):
@@ -151,8 +146,6 @@ class farm():
     
     def form_the_answer_span(self, answer, paragraph):
         return paragraph[answer[0].start-1:]
-
-
 
 
 
