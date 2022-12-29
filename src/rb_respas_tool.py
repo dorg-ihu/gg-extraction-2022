@@ -55,7 +55,7 @@ class respas():
         from rdflib import Graph, Literal
         g = Graph()
         for index, row in df.iterrows():
-            g.add((Literal(row['Unit']), Literal(row['Article']), Literal(row['Value'])))
+            g.add((Literal(row['Unit']), Literal("hasRespa"), Literal(row['Value'])))
         
         g.serialize(destination="RSP_"+self.savename+'.rdf', format='turtle')
         
