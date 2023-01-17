@@ -1,31 +1,39 @@
+from transformers import pipeline, AutoModelForTokenClassification, AutoTokenizer
 from haystack.nodes import FARMReader
 from haystack.schema import Document
 from collections import OrderedDict
-from fuzzywuzzy import fuzz
+#from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 from src import kw_dictionary as kdc
+import unicodedata as ud
 
 
 class farm():
     def __init__(self, textpath, model_name_or_path="alexaapo/greek_legal_bert_v2", data_path="haystack/data", train_filename="long_paragraphs_answers.json", use_gpu=True, reTrain=False):
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
-        
+        #TODO check smaller stride (e.g 64)
         if reTrain:
             self.reader = FARMReader("alexaapo/greek_legal_bert_v2", use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
             self.data_dir = data_path
             self.reader.train(data_dir=self.data_dir, train_filename=train_filename, use_gpu=True, n_epochs=3, batch_size=5, save_dir="haystack/model")
         else:
             self.reader = FARMReader("haystack/model", use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
-
+        
+        
+        self.ner_model = AutoModelForTokenClassification.from_pretrained("amichailidis/greek_legal_bert_v2-finetuned-ner-V3")
+        self.ner_tokenizer = AutoTokenizer.from_pretrained("amichailidis/greek_legal_bert_v2-finetuned-ner-V3", model_max_length=512)
+        self.ner_pip = pipeline("ner", model=self.ner_model, tokenizer=self.ner_tokenizer, grouped_entities=True)
+        
         
         self.body_keywords = kdc.rbrsp_kws
         self.irrelevant_keywords = kdc.rbrsp_ikws
         #self.title_keywords = kdc.rbrsp_tkws
         self.irrelevant_title = kdc.irrelevant_title
-    
+        
         
     def main(self, articles):
         responsibilities_dict = OrderedDict()
@@ -71,6 +79,13 @@ class farm():
         return master_unit
     
     
+    def process_ner_output(self, output_list):
+        entities = []
+        for dct in output_list:
+            if dct["score"] > 0.9:
+                entities.append(dct["word"])
+        return entities
+    
     def get_candidate_paragraphs_per_article(self, paragraphs):
         
         master_unit = self.find_master_unit(paragraphs)
@@ -90,61 +105,91 @@ class farm():
         
         responsibilities = OrderedDict()
         
-        # if paragraphs on the 
-        #if len(paragraphs) > 1:
-        for par in paragraphs:
-            entity = self.rbner.hybridNER(par)[0]
-            if not entity:
-                entity = master_unit
-            query = self.get_query(entity)
-            result = self.reader.predict(query=query,
-                                         documents=[Document(content=par)],
-                                         top_k=3)
-            offset_status = self.get_answer_offset(result, entity)
-
-            if offset_status:
-                answer = self.form_the_answer_span(offset_status, par)
-            else:
-                continue
+        for idx, par in enumerate(paragraphs):
+            print(f"{idx} - {par[:100]}")
+            
+            #entity = self.rbner.hybridNER(par)[0]
+            #print(f"Entity {entity}")
+            
+            entities = self.process_ner_output(self.ner_pip(str(par)))
+            print(f"NER found: {entities}")
+            
+            if not entities:
+                #entity = master_unit 
+                continue #TODO Think again about that
+                
+            
+            for entity in entities:
+            
+                query = self.get_query(entity)
+                print(f"Query: {query}")
+                result = self.reader.predict(query=query,
+                                             documents=[Document(content=par)],
+                                             top_k=3)
+                answer_offset = self.get_answer_offset(result, entity, par)
+                
+                if answer_offset:
+                    answer = self.form_the_answer_span(answer_offset, par)
+                else:
+                    continue
                 #TODO here if not offset status it bugs but needs further consideration. 
                 # It happens due to not finding the entity on context 
             
-            if entity in responsibilities:
-                responsibilities[entity].extend(answer)
-            else:
-                responsibilities[entity] = answer
+                if entity in responsibilities:
+                    responsibilities[entity].extend(answer)
+                else:
+                    responsibilities[entity] = answer
         
         return responsibilities
     
     
     def get_query(self, entity):
         base_query = "Τι αρμοδιότητες έχει "
-        if any(x in entity for x in ["Τμήμα", "ΤΜΗΜΑ"]):
+        if any(x in entity for x in ["Τμήμα", "ΤΜΗΜΑ", "τμημα"]):
             return base_query + 'το ' + entity + ';'
-        elif any(x in entity for x in ["Διεύθυνση", "ΔΙΕΥΘΥΝΣΗ", "Γραμματεία", "ΓΡΑΜΜΑΤΕΙΑ"]):
+        elif any(x in entity for x in ["Διεύθυνση", "ΔΙΕΥΘΥΝΣΗ", "διευθυνση", "Γραμματεία", "ΓΡΑΜΜΑΤΕΙΑ", "γραμματεια"]):
             return base_query + 'η ' + entity + ';'
         else:
             return base_query + entity + ';'
     
     
-    def get_answer_offset(self, result, entity):
+    def remove_intonations(self, txt):
+        """ removes intonation off the text and turns all letters into capitals """
+        d = {ord('\N{COMBINING ACUTE ACCENT}'):None}
+        return ud.normalize('NFD',txt).lower().translate(d)
+    
+    
+    def get_answer_offset(self, result, entity, par):
+        
         answers = []
         for i in range(len(result['answers'])):
-            if fuzz.partial_ratio(entity, result['answers'][i].context) > 80:
+            #TODO extend context pros ta aristera
+            
+            itStartsAt = par.find(result['answers'][i].context)
+            priorContextString = par[:itStartsAt]
+            toAddString = priorContextString.split('.')[-1].strip()
+            extendedContext = toAddString + result['answers'][i].context
+            print(extendedContext)
+            print(f"{len(extendedContext)} --- {len(result['answers'][i].context)}")
+            
+            print(f"SCORE ====> {fuzz.partial_ratio(entity, self.remove_intonations(extendedContext))}")
+            # if fuzz.partial_ratio(entity, self.remove_intonations(result['answers'][i].context)) > 80:
+            #     answers.append(result['answers'][i])
+            if fuzz.partial_ratio(entity, self.remove_intonations(extendedContext)) > 80:
                 answers.append(result['answers'][i])
           
         if answers:
             max_score = 0
             for i in range(len(answers)):
               if answers[i].score > max_score:
-                  answer = answers[i].offsets_in_document
+                  final_offset = answers[i].offsets_in_document
                   max_score = answers[i].score
-            return answer
+            return final_offset
         else:
             return ""
 
     
-    def form_the_answer_span(self, answer, paragraph):
+    def form_the_answer_span(self, answer, paragraph): #TODO change this with Gianni's postprocessing 
         return paragraph[answer[0].start-1:]
 
 
