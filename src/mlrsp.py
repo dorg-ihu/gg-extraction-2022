@@ -186,11 +186,11 @@ class farm():
 
     
     def form_the_answer_span(self, answer_offset, paragraph):
-        # answer_to_paragraph_end = paragraph[answer_offset[0].start-1:]
-        # par_dict = self.FPRS.find_article_paragraphs(" " + answer_to_paragraph_end, 'paragraph')
-        # par_dict = self.FPRS.process_last_split(par_dict)
-        # del par_dict["0"]
-        return paragraph[answer_offset[0].start-1:]
+        answer_to_paragraph_end = paragraph[answer_offset[0].start-1:]
+        par_dict = self.FPRS.find_article_paragraphs(" " + answer_to_paragraph_end, 'paragraph')
+        par_dict = self.FPRS.process_last_split(par_dict)
+        del par_dict["0"]
+        return par_dict
         
 
 
