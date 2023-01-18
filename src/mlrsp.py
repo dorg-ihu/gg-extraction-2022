@@ -106,12 +106,10 @@ class farm():
         responsibilities = OrderedDict()
         
         for idx, par in enumerate(paragraphs):
-            print(f"{idx} - {par[:100]}")
-            
-            #entity = self.rbner.hybridNER(par)[0]
-            #print(f"Entity {entity}")
+
             
             entities = self.process_ner_output(self.ner_pip(str(par)))
+            entities = list(set(entities))
             print(f"NER found: {entities}")
             
             if not entities:
@@ -127,11 +125,12 @@ class farm():
                                              documents=[Document(content=par)],
                                              top_k=3)
                 answer_offset = self.get_answer_offset(result, entity, par)
-                
+                print(f"answer_offset - {answer_offset}")
                 if answer_offset:
                     answer = self.form_the_answer_span(answer_offset, par)
                 else:
                     continue
+                print(f"Answer type {type(answer)}")
                 #TODO here if not offset status it bugs but needs further consideration. 
                 # It happens due to not finding the entity on context 
             
@@ -163,18 +162,15 @@ class farm():
         
         answers = []
         for i in range(len(result['answers'])):
-            #TODO extend context pros ta aristera
             
             itStartsAt = par.find(result['answers'][i].context)
             priorContextString = par[:itStartsAt]
             toAddString = priorContextString.split('.')[-1].strip()
             extendedContext = toAddString + result['answers'][i].context
-            print(extendedContext)
+            
             print(f"{len(extendedContext)} --- {len(result['answers'][i].context)}")
             
             print(f"SCORE ====> {fuzz.partial_ratio(entity, self.remove_intonations(extendedContext))}")
-            # if fuzz.partial_ratio(entity, self.remove_intonations(result['answers'][i].context)) > 80:
-            #     answers.append(result['answers'][i])
             if fuzz.partial_ratio(entity, self.remove_intonations(extendedContext)) > 80:
                 answers.append(result['answers'][i])
           
@@ -189,8 +185,13 @@ class farm():
             return ""
 
     
-    def form_the_answer_span(self, answer, paragraph): #TODO change this with Gianni's postprocessing 
-        return paragraph[answer[0].start-1:]
+    def form_the_answer_span(self, answer_offset, paragraph):
+        # answer_to_paragraph_end = paragraph[answer_offset[0].start-1:]
+        # par_dict = self.FPRS.find_article_paragraphs(" " + answer_to_paragraph_end, 'paragraph')
+        # par_dict = self.FPRS.process_last_split(par_dict)
+        # del par_dict["0"]
+        return paragraph[answer_offset[0].start-1:]
+        
 
 
 
