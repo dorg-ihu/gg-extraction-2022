@@ -373,9 +373,10 @@ class FekParser(IssueParser):
         keys.sort()
         
         last_split = " " + par_dict[keys[-1]]  # added space to be able to get also the initial numbering based on the regex
+        
         q = re.findall(dc.par_pattern,last_split)
         w = self.get_paragraph_levels(q)
-
+        
         #par_level = w[0] if w else 0
         par_level = w[0] #INITIAL 
         
