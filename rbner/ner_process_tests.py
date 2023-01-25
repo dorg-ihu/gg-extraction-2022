@@ -1,3 +1,19 @@
+fpath = "fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf"
+from src.fek_parser import PreParser, FekParser
+import re
+text = PreParser().pdf2text(fpath)
+textpath = re.sub(r".pdf$", ".txt", fpath)
+from src.mlrsp import farm
+RSP, FPRS = farm(textpath), FekParser(textpath)
+articles = FPRS.articles
+article = articles["Άρθρο 26"]
+paragraphs = FPRS.find_article_paragraphs(article)
+mu, rsp_p = RSP.get_candidate_paragraphs_per_article(paragraphs)
+respas = RSP.get_respas(mu, rsp_p)
+
+text = "β. \nτον έλεγχο τήρησης των περί ανάληψης υποχρεώσεων \nδιατάξεων και την παροχή βεβαίωσης"
+par_dict = FPRS.find_article_paragraphs(" " + text, "paragraph")
+par_dict = FPRS.process_last_split(par_dict)
 
 filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf",
              "fek-organismoi-upourgeiwn/yp-ergasiaskaikoinwnikhsasfalishs-134-2017.pdf",
@@ -20,6 +36,8 @@ filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf",
 
 
 filepaths = ["fek-organismoi-upourgeiwn/yp-metanasteushskaiasulou-106-2020.pdf"]
+
+
 filepaths = ["fek-organismoi-upourgeiwn/yp-psifiakhsdiakuvernhshs-40-2020.pdf"]
 
 
@@ -32,10 +50,10 @@ for fpath in filepaths:
     RSP, FPRS = farm(textpath), FekParser(textpath)
     articles = FPRS.articles
     
-    # keys = ["Άρθρο 16"]
-    # filteredarticles = {key: articles[key] for key in keys if key in articles}
+    keys = ["Άρθρο 26"]
+    filteredarticles = {key: articles[key] for key in keys if key in articles}
     
-    respas = RSP.main(articles)
+    respas = RSP.main(filteredarticles)
     print(f"The {fpath} has been processed")
 
 import pandas as pd
@@ -48,8 +66,18 @@ pdresults = pd.DataFrame(results, columns=["Article", "Unit", "Respas"])
 pdresults.to_csv("mlrsp_results_psifiakisdiakuvernhshs.csv", encoding="utf-8")
 
 
-
-
+for fpath in filepaths:
+    from src.fek_parser import PreParser, FekParser
+    import re
+    text = PreParser().pdf2text(fpath)
+    textpath = re.sub(r".pdf$", ".txt", fpath)
+    from src.rb_respas_tool import respas
+    FPRS, RSP = FekParser(textpath), respas(textpath)
+    articles = FPRS.articles
+    
+    
+    relations = RSP.main(articles)
+    
 
 
 
