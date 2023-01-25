@@ -2,20 +2,19 @@ from transformers import pipeline, AutoModelForTokenClassification, AutoTokenize
 from haystack.nodes import FARMReader
 from haystack.schema import Document
 from collections import OrderedDict
-#from fuzzywuzzy import fuzz
 from rapidfuzz import fuzz
 
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 from src import kw_dictionary as kdc
 import unicodedata as ud
-
+import re
 
 class farm():
     def __init__(self, textpath, model_name_or_path="alexaapo/greek_legal_bert_v2", data_path="haystack/data", train_filename="long_paragraphs_answers.json", use_gpu=True, reTrain=False):
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
-        #TODO check smaller stride (e.g 64)
+
         if reTrain:
             self.reader = FARMReader("alexaapo/greek_legal_bert_v2", use_gpu=use_gpu, top_k=3, context_window_size=256, max_seq_len=512, doc_stride=128, batch_size=25)
             self.data_dir = data_path
@@ -47,7 +46,7 @@ class farm():
                         continue
 
                 master_unit, responsibility_paragraphs = self.get_candidate_paragraphs_per_article(article_paragraphs)
-                print(f"On {AR_key} - {len(responsibility_paragraphs)} we found!!")
+                print(f"On {AR_key} - we found {len(responsibility_paragraphs)} respa paragraphs!!")
                 responsibilities = self.get_respas(master_unit, responsibility_paragraphs)
                 
                 if responsibilities:
@@ -107,33 +106,34 @@ class farm():
         
         for idx, par in enumerate(paragraphs):
 
+            # Get entities from Ner and remove duplicates
+            # We Dont use entities = list(set(initial_entities)) to preserve order
+            initial_entities = self.process_ner_output(self.ner_pip(str(par)))
+            seen = set()
+            entities = []
+            for item in initial_entities:
+                if item not in seen:
+                    seen.add(item)
+                    entities.append(item)
             
-            entities = self.process_ner_output(self.ner_pip(str(par)))
-            entities = list(set(entities))
-            print(f"NER found: {entities}")
             
             if not entities:
                 #entity = master_unit 
                 continue #TODO Think again about that
                 
-            
             for entity in entities:
             
                 query = self.get_query(entity)
-                print(f"Query: {query}")
                 result = self.reader.predict(query=query,
                                              documents=[Document(content=par)],
                                              top_k=3)
                 answer_offset = self.get_answer_offset(result, entity, par)
-                print(f"answer_offset - {answer_offset}")
+
                 if answer_offset:
                     answer = self.form_the_answer_span(answer_offset, par)
                 else:
                     continue
-                print(f"Answer type {type(answer)}")
-                #TODO here if not offset status it bugs but needs further consideration. 
-                # It happens due to not finding the entity on context 
-            
+           
                 if entity in responsibilities:
                     responsibilities[entity].extend(answer)
                 else:
@@ -165,12 +165,9 @@ class farm():
             
             itStartsAt = par.find(result['answers'][i].context)
             priorContextString = par[:itStartsAt]
-            toAddString = priorContextString.split('.')[-1].strip()
+            toAddString = re.split('[.)]', priorContextString)[-1].strip()
             extendedContext = toAddString + result['answers'][i].context
-            
-            print(f"{len(extendedContext)} --- {len(result['answers'][i].context)}")
-            
-            print(f"SCORE ====> {fuzz.partial_ratio(entity, self.remove_intonations(extendedContext))}")
+
             if fuzz.partial_ratio(entity, self.remove_intonations(extendedContext)) > 80:
                 answers.append(result['answers'][i])
           
@@ -187,10 +184,13 @@ class farm():
     
     def form_the_answer_span(self, answer_offset, paragraph):
         answer_to_paragraph_end = paragraph[answer_offset[0].start-1:]
-        par_dict = self.FPRS.find_article_paragraphs(" " + answer_to_paragraph_end, 'paragraph')
-        par_dict = self.FPRS.process_last_split(par_dict)
-        del par_dict["0"]
-        return par_dict
+        try:
+            par_dict = self.FPRS.find_article_paragraphs(" " + answer_to_paragraph_end, 'paragraph')
+            par_dict = self.FPRS.process_last_split(par_dict)
+            del par_dict["0"]
+            return par_dict
+        except:
+            return {"#1" : answer_to_paragraph_end}
         
 
 
