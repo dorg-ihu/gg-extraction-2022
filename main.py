@@ -29,15 +29,12 @@ def mainRSP(textpath, method):
     # filteredarticles = {key: articles[key] for key in keys if key in articles}
     # responsibilities = RSP.main(filteredarticles)
     
-    from src.rb_respas_tool import respas
-    RSP = respas(textpath)
-    
-    # if method == "RB":
-    #     from src.rb_respas_tool import respas
-    #     RSP = respas(textpath)
-    # else:
-    #     from src.mlrsp import respas as rsp
-    #     RSP = rsp(textpath)
+    if method == "RB":
+        from src.rb_respas_tool import respas
+        RSP = respas(textpath)
+    else:
+        from src.mlrsp import farm
+        RSP = farm(textpath)
 
     return RSP.main(articles)
     
