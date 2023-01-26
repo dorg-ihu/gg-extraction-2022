@@ -3,6 +3,7 @@ from haystack.nodes import FARMReader
 from haystack.schema import Document
 from collections import OrderedDict
 from rapidfuzz import fuzz
+import pandas as pd
 
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
@@ -12,6 +13,8 @@ import re
 
 class farm():
     def __init__(self, textpath, model_name_or_path="alexaapo/greek_legal_bert_v2", data_path="haystack/data", train_filename="long_paragraphs_answers.json", use_gpu=True, reTrain=False):
+        
+        self.savename = textpath.split("/")[1].split(".")[0]
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
 
@@ -55,6 +58,17 @@ class farm():
             except Exception as e:
                 print(f"Article {AR_key} resulted in the following error: {e}")
                 pass
+            
+        results = []
+        for key, value in responsibilities_dict.items(): # here key has the AR_key value
+            for k, v in value.items():
+                if v:
+                    respas = ' '.join(map(str, v.values()))
+                    results.append((key, k, respas))
+
+        pdresults = pd.DataFrame(results, columns=["Article", "Unit", "Value"])
+        pdresults.to_csv("ML_RSP_"+self.savename+".csv", index=False, encoding="utf-8")
+        
         return responsibilities_dict
     
     

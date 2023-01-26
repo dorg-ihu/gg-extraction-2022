@@ -1,6 +1,7 @@
 from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 import networkx as nx
+import pandas as pd
 import re
 from src import kw_dictionary as kdc
 
@@ -8,7 +9,8 @@ from src import kw_dictionary as kdc
 class structure():
 
     def __init__(self, textpath):
-
+        
+        self.savename = textpath.split("/")[1].split(".")[0]
         self.rbner = rbNER()
         self.FPRS = FekParser(textpath)
         #TODO consider for keywords : [ "έχει", "είναι" , "κατανέμονται στ" , "κατανέμονται μεταξύ", "υπηρεσίες υπαγόμενες" ]
@@ -63,6 +65,10 @@ class structure():
             except Exception as e:
                 print(f"Article {AR_key} resulted in error {e}")
                 pass
+        
+        columns = ["Article", "Paragraph", "subject", "object"]
+        pdresults = pd.DataFrame(relations_list, columns=columns)
+        pdresults.to_csv("RB_RE_"+self.savename+".csv", index=False, encoding="utf-8")
         # final_list = self.postprocessing(relations_list)
         return relations_list
     

@@ -2,6 +2,7 @@ from rbner.rbNER import rbNER
 from src.fek_parser import FekParser
 from src import kw_dictionary as kdc
 from collections import OrderedDict
+import pandas as pd
 import re
 
 
@@ -39,14 +40,13 @@ class respas():
                 print(f"Article {AR_key} resulted in the following error: {e}")
                 pass
         
-        import pandas as pd
         results = []
         for key, value in responsibilities_dict.items(): # here key has the AR_key value
             for k, v in value.items():
                 if v:
                     results.append((key, k, " ".join(v)))
         pdresults = pd.DataFrame(results, columns=["Article", "Unit", "Value"])
-        pdresults.to_csv("RSP_"+self.savename+".csv", index=False, encoding="utf-8")
+        pdresults.to_csv("RB_RSP_"+self.savename+".csv", index=False, encoding="utf-8")
         #self.get_rdf(pdresults)
         return responsibilities_dict
     

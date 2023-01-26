@@ -266,7 +266,7 @@ class stuctureML():
         pydot_graph = nx.nx_pydot.to_pydot(nx_graph)
         pydot_graph.set_rankdir('LR')
         
-        pydot_graph.write_png(self.savename+'.png', encoding='UTF-8')
+        pydot_graph.write_png("MLRE_"+self.savename+'.png', encoding='UTF-8')
         print("Png file created at your directory")
 
         
