@@ -64,7 +64,7 @@ FPRS = FekParser(textpath)
 paragraphs = FPRS.find_article_paragraphs(text)
 ```
 
-* Scrape amendments from kodiko.gr (account required). For more information see [] 
+* Scrape amendments from kodiko.gr (account required). For more information see ![here](https://github.com/dorg-ihu/gg-extraction-2022/wiki/4.-Amendments-Detection). 
 ```
 python amendments_detector.py --filepath https://www.kodiko.gr/nomothesia/document/308558 --email example@example.com --password --br firefox
 ```
