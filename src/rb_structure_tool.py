@@ -6,7 +6,7 @@ import re
 from src import kw_dictionary as kdc
 
 
-class structure():
+class rb_structure():
 
     def __init__(self, textpath):
         

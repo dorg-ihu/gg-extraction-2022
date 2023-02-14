@@ -8,17 +8,17 @@ def mainRE(textpath, method):
     FPRS = FekParser(textpath)
     articles = FPRS.articles
     
-    # keys = ["Άρθρο 2", "Άρθρο 3"] # here read the possible articles that user wants to extract
-    # filteredarticles = {key: articles[key] for key in keys if key in articles}
+    #keys = ["Άρθρο 19"] # here read the possible articles that user wants to extract
+    #filteredarticles = {key: articles[key] for key in keys if key in articles}
     # relations = STR.main(filteredarticles)
     
     if method == "RB":
-        from src.rb_structure_tool import structure
-        STR = structure(textpath)
+        from src.rb_structure_tool import rb_structure
+        STR = rb_structure(textpath)
     else:
-        from src.mlre import structureML as sml
-        STR = sml(textpath)
-    
+        from src.ml_structure_tool import ml_structure
+        STR = ml_structure(textpath)
+        
     return STR.main(articles)
 
 def mainRSP(textpath, method):
@@ -30,11 +30,11 @@ def mainRSP(textpath, method):
     # responsibilities = RSP.main(filteredarticles)
     
     if method == "RB":
-        from src.rb_respas_tool import respas
-        RSP = respas(textpath)
+        from src.rb_respas_tool import rb_respas
+        RSP = rb_respas(textpath)
     else:
-        from src.mlrsp import farm
-        RSP = farm(textpath)
+        from src.ml_respas_tool import ml_respas
+        RSP = ml_respas(textpath)
 
     return RSP.main(articles)
     

@@ -6,7 +6,7 @@ import pandas as pd
 import re
 
 
-class respas():
+class rb_respas():
     
     def __init__(self, textpath):
         
