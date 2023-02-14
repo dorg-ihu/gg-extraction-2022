@@ -8,7 +8,6 @@ NOTE: THIS REPO IS UNDER CONSTRUCTION SOME ATTRIBUTES MAY NOT BE FULLY FUNCTIONA
 
 ## 📝 Table of Contents
 - [Problem Definition](#problem_statement)
-- [Dependencies](#dependencies)
 - [Setting up a local environment](#getting_started)
 - [Usage](#usage)
 - [Future Scope](#future_scope)
@@ -42,11 +41,15 @@ The above command will create in your directory an rdf file with the results as 
 In case you are interested in other subtasks you may execute the following:  
 
 * Apply named-entity recognition on given legal text  
+
+Based on Regex
+
 ```
 from rbner.rbNER import rbNER  
 rbner = rbNER()  
 results = rbner.hybridNER(text)
 ```
+
 * Get the articles given a txt file
 ```
 from src.fek_parser FekParser
@@ -65,6 +68,10 @@ paragraphs = FPRS.find_article_paragraphs(text)
 ```
 python amendments_detector.py --filepath https://www.kodiko.gr/nomothesia/document/308558 --email example@example.com --password --br firefox
 ```
+
+## 🚀 Future Scope <a name = "future_scope"></a>
+
+...add text
 
 ## ✍️ Authors <a name = "authors"></a>
 - [@Ioannis Konstantinidis](https://github.com/ikonstas-ds)  
